@@ -1,0 +1,2425 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Filo Operasyon Paneli</title>
+<meta name="description" content="Örnek filo operasyon paneli: filo göstergeleri, araç yaşam döngüsü, bakım, hasar ve servis takibi, maliyet raporlaması, telematik ve kullanım analizi.">
+<meta property="og:title" content="Filo Operasyon Paneli — örnek çalışma">
+<meta property="og:description" content="Ferhat Acıcı tarafından Bosch Türkiye Fleet Operations Responsible başvurusu için hazırlanmış örnek panel. Tüm veriler örnek amaçlı üretilmiştir; şirkete ait değildir.">
+<meta property="og:type" content="website">
+<meta property="og:locale" content="tr_TR">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="anonymous" referrerpolicy="no-referrer">
+<style>
+/* ===== Renk ve tipografi belirteçleri (token) ===== */
+:root, :root[data-theme="light"] {
+  color-scheme: light;
+  --bg: #f3f5f8;
+  --surface: #ffffff;
+  --surface-2: #f1f4f8;
+  --ink: #141c2b;
+  --ink-2: #3b4659;
+  --muted: #667085;
+  --line: #e1e6ee;
+  --line-strong: #c3ccd9;
+  --head-bg: #142033;
+  --head-ink: #f3f6fb;
+  --head-muted: #a9b5c8;
+  --head-line: #24344e;
+  --head-accent: #f5b301;
+  --primary: #1e4f9c;
+  --primary-ink: #ffffff;
+  --primary-soft: #e2ebf8;
+  --accent: #a86200;
+  --accent-soft: #fdf0d8;
+  --good: #1b7a4a;
+  --good-soft: #ddf1e5;
+  --warn: #9a5b00;
+  --warn-soft: #fcefd5;
+  --crit: #b42318;
+  --crit-soft: #fde4e1;
+  --chart-grid: #e1e7ef;
+  --chart-1: #1e4f9c;
+  --chart-2: #c27803;
+  --chart-target: #b42318;
+  --chart-band: #e6edf7;
+  --map-bg: #e3e9f0;
+  --focus: #d97f00;
+  --shadow: 0 1px 2px rgba(20, 28, 43, 0.05);
+  --pop-shadow: 0 8px 28px rgba(20, 28, 43, 0.14), 0 1px 3px rgba(20, 28, 43, 0.08);
+  --font-sans: "IBM Plex Sans", "Segoe UI", system-ui, -apple-system, Roboto, Arial, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --bg: #0b111c;
+    --surface: #121a28;
+    --surface-2: #172133;
+    --ink: #e6ebf3;
+    --ink-2: #b7c2d3;
+    --muted: #8b98ad;
+    --line: #233047;
+    --line-strong: #34445f;
+    --head-bg: #070c15;
+    --head-ink: #eef2f8;
+    --head-muted: #9aa8bd;
+    --head-line: #1b2638;
+    --head-accent: #f5b84a;
+    --primary: #7aa7f0;
+    --primary-ink: #07101f;
+    --primary-soft: #18294a;
+    --accent: #f5b84a;
+    --accent-soft: #3a2a0e;
+    --good: #5ccb8f;
+    --good-soft: #10301f;
+    --warn: #f2b84f;
+    --warn-soft: #362810;
+    --crit: #ff8075;
+    --crit-soft: #3d1714;
+    --chart-grid: #1e2a3e;
+    --chart-1: #7aa7f0;
+    --chart-2: #f5b84a;
+    --chart-target: #ff8075;
+    --chart-band: #172a45;
+    --map-bg: #121c2b;
+    --focus: #f5b84a;
+    --shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+    --pop-shadow: 0 10px 30px rgba(0, 0, 0, 0.55), 0 1px 3px rgba(0, 0, 0, 0.5);
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #0b111c;
+  --surface: #121a28;
+  --surface-2: #172133;
+  --ink: #e6ebf3;
+  --ink-2: #b7c2d3;
+  --muted: #8b98ad;
+  --line: #233047;
+  --line-strong: #34445f;
+  --head-bg: #070c15;
+  --head-ink: #eef2f8;
+  --head-muted: #9aa8bd;
+  --head-line: #1b2638;
+  --head-accent: #f5b84a;
+  --primary: #7aa7f0;
+  --primary-ink: #07101f;
+  --primary-soft: #18294a;
+  --accent: #f5b84a;
+  --accent-soft: #3a2a0e;
+  --good: #5ccb8f;
+  --good-soft: #10301f;
+  --warn: #f2b84f;
+  --warn-soft: #362810;
+  --crit: #ff8075;
+  --crit-soft: #3d1714;
+  --chart-grid: #1e2a3e;
+  --chart-1: #7aa7f0;
+  --chart-2: #f5b84a;
+  --chart-target: #ff8075;
+  --chart-band: #172a45;
+  --map-bg: #121c2b;
+  --focus: #f5b84a;
+  --shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --pop-shadow: 0 10px 30px rgba(0, 0, 0, 0.55), 0 1px 3px rgba(0, 0, 0, 0.5);
+}
+/* ===== Temel ===== */
+*, *::before, *::after { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--font-sans); font-size: 15px; line-height: 1.5; overflow-x: hidden; }
+h1, h2, h3, h4 { margin: 0; line-height: 1.25; }
+p { margin: 0 0 0.6rem; }
+a { color: var(--primary); }
+a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible, [tabindex]:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+.wrap { max-width: 1260px; margin: 0 auto; padding: 0 16px; }
+.num, td, .kpi-val { font-variant-numeric: tabular-nums; }
+.muted { color: var(--muted); }
+.small { font-size: 12.5px; }
+[hidden] { display: none !important; }
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+/* ===== Üst bölüm ===== */
+.top { background: var(--head-bg); color: var(--head-ink); border-bottom: 1px solid var(--head-line); font-size: 14px; }
+.top-row { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 20px; padding-top: 12px; padding-bottom: 6px; }
+.top h1 { font-size: 1.15rem; font-weight: 600; letter-spacing: -0.01em; display: inline-flex; align-items: center; gap: 9px; }
+.top h1::before { content: ""; width: 10px; height: 18px; border-radius: 2px; background: var(--head-accent); transform: skewX(-14deg); flex: none; }
+.note { margin: 0; flex: 1 1 320px; font-size: 12.5px; color: var(--head-muted); }
+.theme-btn { font: inherit; font-size: 12.5px; color: var(--head-muted); background: transparent; border: 1px solid var(--head-line); border-radius: 999px; padding: 4px 12px; min-height: 30px; cursor: pointer; }
+.theme-btn:hover { color: var(--head-ink); border-color: var(--head-muted); }
+.tabs { display: flex; gap: 4px; overflow-x: auto; scrollbar-width: thin; -webkit-overflow-scrolling: touch; }
+.tabs a { flex: 0 0 auto; display: block; padding: 8px 12px 9px; color: var(--head-muted); text-decoration: none; font-weight: 500; font-size: 14px; border-bottom: 2px solid transparent; white-space: nowrap; }
+.tabs a:first-child { margin-left: -12px; }
+.tabs a:hover { color: var(--head-ink); }
+.tabs a[aria-selected="true"] { color: var(--head-ink); border-bottom-color: var(--head-accent); }
+/* Dönem satırı */
+.ctx { font-size: 14px; }
+.ctx-row { position: relative; display: flex; flex-wrap: wrap; align-items: center; gap: 8px 20px; padding-top: 14px; padding-bottom: 2px; }
+.ctl { display: inline-flex; align-items: center; gap: 8px; }
+.ctl label { font-size: 12.5px; color: var(--muted); }
+.ctl select { font-size: 14px; border-color: var(--line); background: var(--surface); padding: 5px 8px; min-height: 34px; }
+.ctx .grow { flex: 1 1 auto; }
+.ctx-title { margin: 0; display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 10px; min-width: 0; font-size: 14px; color: var(--ink); }
+.ctx-title b { font-weight: 600; }
+.ctx-title span { font-size: 12.5px; color: var(--muted); }
+body[data-tab="yasam"] #monthCtl { display: none; }
+body:not([data-tab="ozet"]) .ozet-only { display: none !important; }
+.btn-quiet { font: inherit; font-size: 14px; font-weight: 500; cursor: pointer; color: var(--ink-2); background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 5px 12px; min-height: 34px; }
+.btn-quiet:hover, .btn-quiet[aria-expanded="true"] { border-color: var(--line-strong); color: var(--ink); }
+.linkbtn { font: inherit; font-size: 12.5px; font-weight: 500; color: var(--primary); background: none; border: 0; padding: 4px 2px; cursor: pointer; border-radius: 3px; white-space: nowrap; }
+.linkbtn:hover { text-decoration: underline; }
+.targets-panel { position: absolute; z-index: 40; top: calc(100% + 6px); right: 16px; width: min(440px, calc(100vw - 32px)); background: var(--surface); border: 1px solid var(--line); border-radius: 8px; box-shadow: var(--pop-shadow); padding: 16px 18px 14px; }
+.tp-h { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 8px; }
+.tp-h h2 { font-size: 14px; font-weight: 600; }
+.tg-row { display: grid; grid-template-columns: minmax(0, 1fr) 96px; align-items: center; gap: 2px 12px; padding: 6px 0; border-bottom: 1px solid var(--line); }
+.tg-row:last-of-type { border-bottom: 0; }
+.tg-row label { font-size: 14px; color: var(--ink); }
+.tg-row label span { display: block; font-size: 12.5px; color: var(--muted); }
+.tg-row input { width: 96px; text-align: right; }
+.tg-row .err { grid-column: 1 / -1; }
+.tp-rule { font-size: 12.5px; color: var(--muted); margin: 10px 0 0; line-height: 1.45; }
+.x-btn { font: inherit; font-size: 18px; line-height: 1; color: var(--muted); background: none; border: 0; border-radius: 4px; width: 28px; height: 28px; cursor: pointer; flex: none; }
+.x-btn:hover { color: var(--ink); background: var(--surface-2); }
+/* ===== Paneller ===== */
+main { padding-top: 14px; padding-bottom: 32px; }
+.pane { font-size: 14px; }
+section.pane > * + * { margin-top: 12px; }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 16px 18px; box-shadow: var(--shadow); min-width: 0; }
+.card-h { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px 12px; margin-bottom: 8px; }
+.card-h h3 { font-size: 14px; font-weight: 600; }
+.card-h .grow { flex: 1 1 auto; }
+.card-h select { font-size: 13.5px; border-color: var(--line); padding: 3px 6px; min-height: 30px; }
+.grid-2 { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr); gap: 12px; align-items: start; }
+.grid-2.even { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+.grid-2 > * { min-width: 0; }
+@media (max-width: 1100px) { .grid-2, .grid-2.even { grid-template-columns: minmax(0, 1fr); } }
+/* ===== Durum çipleri ===== */
+.chip { display: inline-flex; align-items: center; gap: 5px; font-size: 0.75rem; font-weight: 600; padding: 2px 9px 2px 8px; border-radius: 999px; white-space: nowrap; border: 1px solid transparent; }
+.chip::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; flex: none; }
+.chip.good { color: var(--good); background: var(--good-soft); }
+.chip.warn { color: var(--warn); background: var(--warn-soft); }
+.chip.crit { color: var(--crit); background: var(--crit-soft); }
+.chip.na { color: var(--muted); background: var(--surface-2); }
+.chip.info { color: var(--primary); background: var(--primary-soft); }
+/* ===== Gösterge kartları ===== */
+.kpi-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+.kpi { position: relative; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px 14px 18px; display: flex; flex-direction: column; gap: 4px; min-width: 0; box-shadow: var(--shadow); }
+.kpi-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
+.kpi-top h3 { font-size: 14px; font-weight: 500; color: var(--ink-2); line-height: 1.35; }
+.kpi-val { font-size: 30px; font-weight: 600; letter-spacing: -0.02em; line-height: 1.15; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.kpi-val .u, .sg-n .u { font-size: 14px; font-weight: 500; color: var(--muted); letter-spacing: 0; margin-left: 4px; white-space: nowrap; }
+.kpi-foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px 10px; font-size: 12.5px; margin-top: 2px; }
+.kpi-foot .vs, .kpi-foot .sub { color: var(--muted); }
+.kpi-foot .sub { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1 1 0; }
+.kpi-foot .chip { flex: none; }
+.delta { font-weight: 600; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.delta.better { color: var(--good); }
+.delta.worse { color: var(--crit); }
+.delta.flat { color: var(--muted); }
+.info-btn { flex: none; width: 24px; height: 24px; border-radius: 50%; border: 1px solid var(--line); background: var(--surface); color: var(--muted); font: italic 600 12.5px/1 Georgia, "Times New Roman", serif; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; padding: 0; }
+.info-btn:hover, .info-btn[aria-expanded="true"] { color: var(--primary); border-color: var(--primary); background: var(--primary-soft); }
+.pop-anchor { position: relative; display: inline-flex; align-items: center; flex: none; }
+.kpi-pop { position: absolute; z-index: 30; top: calc(100% + 6px); right: -8px; width: min(360px, calc(100vw - 24px)); background: var(--surface); border: 1px solid var(--line); border-radius: 8px; box-shadow: var(--pop-shadow); padding: 12px 14px; font-size: 12.5px; font-weight: 400; color: var(--ink-2); line-height: 1.5; text-align: left; white-space: normal; }
+.kpi-pop .pop-h { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 6px; }
+.kpi-pop .pop-h b { font-size: 14px; color: var(--ink); font-weight: 600; }
+.kpi-pop .pop-l { margin: 8px 0 3px; font-weight: 600; color: var(--muted); }
+.kpi-pop .formula { margin: 0; white-space: pre-line; }
+.kpi-pop .pop-meta { margin: 8px 0 0; }
+.kpi-pop .linkbtn { margin-top: 6px; padding-left: 0; }
+.formula { font-family: var(--font-mono); font-size: 12px; color: var(--ink-2); background: var(--surface-2); border-radius: 4px; padding: 6px 8px; line-height: 1.5; overflow-wrap: anywhere; }
+/* İkincil göstergeler: ince satır */
+.kpi-mini { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.tabs .t-short { display: none; }
+.kpi.mini { flex-direction: row; align-items: center; gap: 10px; padding: 9px 12px 9px 14px; border-radius: 8px; box-shadow: none; background: transparent; }
+.kpi.mini .kpi-top { flex: 1 1 auto; min-width: 0; align-items: center; }
+.kpi.mini .kpi-top h3 { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.kpi.mini .kpi-val { order: 1; font-size: 17px; letter-spacing: -0.01em; overflow: visible; }
+.kpi.mini .kpi-val .u { font-size: 12.5px; margin-left: 3px; }
+.kpi.mini .kpi-foot { order: 2; margin: 0; flex-wrap: nowrap; }
+.kpi.mini .kpi-foot .vs, .kpi.mini .kpi-foot .delta { display: none; }
+.kpi.mini .chip { padding: 1px 7px; font-size: 0.7rem; }
+.kpi.mini .kpi-top .pop-anchor { order: 3; }
+/* Eğilim ve iyileştirme alanları */
+.trend-card .card-h { justify-content: flex-start; gap: 6px 14px; }
+.legend { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 12.5px; color: var(--muted); margin: 0 0 0 auto; }
+.legend i { display: inline-block; width: 18px; height: 3px; vertical-align: middle; margin-right: 6px; background: var(--chart-1); }
+.legend i.tg { background: transparent; border-top: 2px dashed var(--chart-target); height: 0; }
+.legend i.plan { background: transparent; border-top: 2px dashed var(--chart-2); height: 0; }
+.prio { list-style: none; margin: 0; padding: 0; }
+.prio li { border-bottom: 1px solid var(--line); padding: 10px 2px; display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2px 10px; align-items: center; }
+.prio li:last-child { border-bottom: 0; }
+.prio .pi-txt { min-width: 0; }
+.prio .pi-k { color: var(--ink-2); }
+.prio .pi-g { color: var(--muted); font-size: 12.5px; font-variant-numeric: tabular-nums; }
+.prio .pi-a { grid-column: 1 / -1; font-size: 12.5px; color: var(--ink-2); line-height: 1.45; }
+.prio-empty { font-size: 14px; color: var(--ink-2); padding: 10px 0; margin: 0; }
+.foot-row { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px 20px; padding: 2px 2px 0; }
+.sample-strip { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; font-size: 12.5px; color: var(--ink-2); min-width: 0; }
+.tag-sample { font-size: 12px; font-weight: 600; color: var(--muted); background: var(--surface-2); border: 1px solid var(--line); border-radius: 999px; padding: 0 9px; white-space: nowrap; }
+/* ===== Yaşam döngüsü akışı ===== */
+.pipe { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; }
+.stage { position: relative; display: flex; flex-direction: column; gap: 4px; text-align: left; font: inherit; color: var(--ink); background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; box-shadow: var(--shadow); cursor: pointer; min-width: 0; }
+.stage:hover { border-color: var(--line-strong); }
+.stage[aria-pressed="true"] { border-color: var(--primary); box-shadow: inset 0 0 0 1px var(--primary); }
+.stage + .stage::before { content: ""; position: absolute; left: -12px; top: 50%; width: 8px; height: 8px; border-top: 2px solid var(--line-strong); border-right: 2px solid var(--line-strong); transform: translate(-2px, -50%) rotate(45deg); }
+.sg-k { font-size: 12px; font-family: var(--font-mono); color: var(--muted); }
+.sg-t { font-size: 14px; font-weight: 500; color: var(--ink-2); line-height: 1.35; }
+.sg-n { font-size: 30px; font-weight: 600; letter-spacing: -0.02em; line-height: 1.15; font-variant-numeric: tabular-nums; }
+.sg-f { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px 10px; font-size: 12.5px; color: var(--muted); }
+.cks { display: inline-flex; gap: 3px; vertical-align: middle; margin-right: 8px; }
+.ck { width: 17px; height: 17px; border-radius: 4px; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; line-height: 1; }
+.ck.y { background: var(--good-soft); color: var(--good); }
+.ck.n { background: var(--crit-soft); color: var(--crit); }
+/* ===== Tablolar ===== */
+.tbl-wrap { position: relative; overflow-x: auto; -webkit-overflow-scrolling: touch; max-width: 100%; }
+table { border-collapse: collapse; width: 100%; font-size: 13.5px; }
+th, td { padding: 7px 12px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: middle; }
+th { color: var(--muted); font-weight: 500; font-size: 12.5px; white-space: nowrap; vertical-align: bottom; }
+td.n, th.n { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+tbody tr:hover td { background: var(--surface-2); }
+tbody tr:last-child td { border-bottom: 0; }
+tfoot td { font-weight: 600; border-top: 1px solid var(--line-strong); border-bottom: 0; }
+td .sub, th .sub { display: block; font-size: 12px; color: var(--muted); font-weight: 400; white-space: nowrap; }
+td .sub.wrap-t { white-space: normal; }
+td.neg { color: var(--crit); }
+td .sub.neg-t { color: var(--crit); font-weight: 600; }
+.nowrap { white-space: nowrap; }
+.tbl-card { padding: 14px 0 4px; }
+.tbl-card > .card-h, .tbl-card > .card-note { padding: 0 18px; }
+.tbl-card th:first-child, .tbl-card td:first-child { padding-left: 18px; }
+.tbl-card th:last-child, .tbl-card td:last-child { padding-right: 18px; }
+.card-note { font-size: 12.5px; color: var(--muted); margin: 0 0 8px; }
+.tbl-card .card-note.end { margin: 8px 0 10px; }
+.dt { font-weight: 600; white-space: nowrap; }
+.dt.st-over { color: var(--crit); }
+.dt.st-soon { color: var(--warn); }
+.dt.st-ok { color: var(--ink-2); font-weight: 400; }
+.bar { position: relative; display: inline-block; width: 64px; height: 6px; border-radius: 999px; background: var(--surface-2); vertical-align: middle; margin-right: 8px; overflow: hidden; }
+.bar > span { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 999px; background: var(--primary); }
+.bar.crit > span { background: var(--crit); }
+.bar.warn > span { background: var(--accent); }
+.filters { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+/* ===== Formlar ===== */
+input[type="text"], select { font: inherit; font-size: 0.92rem; color: var(--ink); background: var(--surface); border: 1px solid var(--line-strong); border-radius: 4px; padding: 6px 8px; min-height: 34px; max-width: 100%; }
+input[type="text"].num-in { font-variant-numeric: tabular-nums; text-align: right; }
+input[aria-invalid="true"] { border-color: var(--crit); background: var(--crit-soft); }
+.err { color: var(--crit); font-size: 0.8rem; }
+.err:empty { display: none; }
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 6px; overflow: hidden; }
+.seg button { font: inherit; font-size: 12.5px; font-weight: 500; color: var(--ink-2); background: var(--surface); border: 0; padding: 3px 10px; min-height: 28px; cursor: pointer; }
+.seg button + button { border-left: 1px solid var(--line); }
+.seg button[aria-pressed="true"] { background: var(--primary-soft); color: var(--primary); }
+/* ===== Grafik ===== */
+.chart-box { width: 100%; min-height: 200px; position: relative; }
+svg.chart { display: block; max-width: 100%; }
+.ch-grid { stroke: var(--chart-grid); stroke-width: 1; }
+.ch-axis { stroke: var(--line-strong); stroke-width: 1; }
+.ch-txt { fill: var(--muted); font-family: var(--font-mono); font-size: 11px; }
+.ch-sel { fill: var(--chart-band); }
+.ch-s1 { stroke: var(--chart-1); fill: none; stroke-width: 2.25; }
+.ch-plan { stroke: var(--chart-2); fill: none; stroke-width: 2; stroke-dasharray: 6 4; }
+.ch-p1 { fill: var(--chart-1); stroke: var(--surface); stroke-width: 1.5; }
+.ch-pplan { fill: var(--chart-2); stroke: var(--surface); stroke-width: 1; }
+.ch-target { stroke: var(--chart-target); stroke-width: 1.5; stroke-dasharray: 6 4; fill: none; }
+.ch-target-txt { fill: var(--chart-target); font-family: var(--font-mono); font-size: 11px; paint-order: stroke; stroke: var(--surface); stroke-width: 4px; stroke-linejoin: round; }
+/* ===== Harita ===== */
+.map-box { height: 360px; border: 1px solid var(--line); border-radius: 8px; background: var(--map-bg); position: relative; overflow: hidden; }
+#map { position: absolute; inset: 0; }
+.map-note { font-size: 12.5px; padding: 6px 10px; margin: 0 0 8px; border-left: 4px solid var(--accent); background: var(--accent-soft); border-radius: 0 4px 4px 0; }
+.map-note:empty { display: none; }
+.map-foot { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 16px; margin-top: 8px; font-size: 12.5px; color: var(--muted); }
+.leaflet-container { background: var(--map-bg); font-family: var(--font-sans); }
+path.mk-base { fill: var(--primary); fill-opacity: 0.8; stroke: var(--surface); }
+.leaflet-popup-content-wrapper, .leaflet-popup-tip { background: var(--surface); color: var(--ink); }
+.leaflet-popup-content { font-size: 0.84rem; line-height: 1.45; margin: 12px 14px; }
+.leaflet-container a.leaflet-popup-close-button { color: var(--muted); }
+.leaflet-control-attribution { font-size: 0.68rem; }
+:root[data-theme="dark"] .leaflet-tile-pane { filter: invert(1) hue-rotate(180deg) brightness(0.9) contrast(0.88); }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .leaflet-tile-pane { filter: invert(1) hue-rotate(180deg) brightness(0.9) contrast(0.88); } }
+.pop h4 { font-size: 0.9rem; margin-bottom: 4px; }
+.pop table { font-size: 0.8rem; width: auto; }
+.pop td { padding: 2px 10px 2px 0; border: 0; }
+.pop tr:hover td { background: transparent; }
+.pop .src { display: block; font-size: 12px; color: var(--muted); margin-top: 3px; }
+.schem { width: 100%; height: 100%; display: block; }
+.sc-base { fill: var(--primary); fill-opacity: 0.8; stroke: var(--surface); stroke-width: 2; }
+.sc-hit { cursor: pointer; }
+.sc-hit:focus-visible { outline: none; }
+.sc-hit:focus-visible circle { stroke: var(--focus); stroke-width: 3; }
+.sc-txt { fill: var(--ink-2); font-size: 11.5px; font-family: var(--font-sans); paint-order: stroke; stroke: var(--map-bg); stroke-width: 3px; stroke-linejoin: round; }
+.sc-info { position: absolute; right: 10px; top: 10px; max-width: min(260px, calc(100% - 20px)); background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 10px 12px; box-shadow: var(--shadow); font-size: 0.84rem; }
+.sc-info:empty { display: none; }
+/* ===== Öneri listesi ===== */
+.act-list { list-style: none; margin: 0; padding: 0; }
+.act-list li { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2px 10px; align-items: center; padding: 9px 2px; border-bottom: 1px solid var(--line); }
+.act-list li:last-child { border-bottom: 0; }
+.act-list .a-txt { min-width: 0; }
+.act-list .a-sub { grid-column: 1 / -1; font-size: 12.5px; color: var(--ink-2); }
+/* ===== Alt bilgi ===== */
+footer { border-top: 1px solid var(--line); background: var(--surface); padding: 14px 0 18px; font-size: 14px; color: var(--ink-2); }
+footer p { margin: 0; }
+footer .contact { user-select: text; font-weight: 500; color: var(--ink); }
+footer .foot-note { font-size: 12.5px; color: var(--muted); margin-top: 2px; }
+/* ===== Duyarlı düzen ===== */
+@media (max-width: 900px) {
+  .kpi-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .kpi-mini { grid-template-columns: minmax(0, 1fr); gap: 0; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); }
+  .kpi.mini { border: 0; border-radius: 0; border-bottom: 1px solid var(--line); }
+  .kpi.mini:last-child { border-bottom: 0; }
+  .pipe { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  .stage + .stage::before { display: none; }
+}
+@media (max-width: 600px) {
+  body { font-size: 14.5px; }
+  .top-row { padding-top: 10px; }
+  .top h1 { flex: 1 1 auto; font-size: 1.05rem; }
+  .note { order: 3; flex-basis: 100%; }
+  .tabs a { padding: 8px 10px 9px; }
+  .ctx-row { gap: 8px 12px; }
+  .ctx-title { flex-basis: 100%; order: -1; }
+  .kpi-grid { gap: 10px; }
+  .kpi, .stage { padding: 12px 12px 12px 14px; }
+  .kpi-val, .sg-n { font-size: 23px; }
+  .kpi-val .u, .sg-n .u { font-size: 12.5px; margin-left: 2px; }
+  .kpi-foot { flex-direction: column; align-items: flex-start; gap: 6px; }
+  .kpi-foot .vs { display: inline; }
+  .kpi-foot .sub { flex: none; white-space: normal; }
+  .sg-f { flex-direction: column; align-items: flex-start; gap: 4px; }
+  .tabs .t-long { display: none; }
+  .tabs .t-short { display: inline; }
+  .kpi.mini { gap: 8px; padding: 9px 10px 9px 12px; }
+  .kpi.mini .kpi-foot { flex-direction: row; align-items: center; }
+  .kpi.mini .kpi-top h3 { white-space: normal; }
+  .targets-panel { right: 0; left: 0; margin: 0 auto; }
+  .legend { margin-left: 0; }
+  .card { padding: 14px; }
+  .tbl-card { padding: 14px 0 4px; }
+  .tbl-card > .card-h, .tbl-card > .card-note { padding: 0 14px; }
+  .tbl-card th:first-child, .tbl-card td:first-child { padding-left: 14px; }
+  .tbl-card th:last-child, .tbl-card td:last-child { padding-right: 14px; }
+  th, td { padding-left: 9px; padding-right: 9px; }
+  .map-box { height: 320px; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .tabs a, .chip, .btn-quiet, .stage { transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="wrap top-row">
+    <h1>Filo Operasyon Paneli</h1>
+    <p class="note" id="disclaimer">Örnek çalışma — Ferhat Acıcı tarafından Bosch Türkiye Fleet Operations Responsible başvurusu için hazırlanmıştır. Tüm veriler örnek amaçlı üretilmiştir; şirkete ait değildir.</p>
+    <button type="button" id="themeBtn" class="theme-btn" aria-pressed="false">Koyu tema</button>
+  </div>
+  <nav class="wrap tabs" role="tablist" aria-label="Panel bölümleri">
+    <a href="#ozet" id="tab-ozet" role="tab" aria-controls="panel-ozet" aria-selected="true"><span class="t-long">Filo Özeti</span><span class="t-short">Özet</span></a>
+    <a href="#yasam" id="tab-yasam" role="tab" aria-controls="panel-yasam" aria-selected="false"><span class="t-long">Araç Yaşam Döngüsü</span><span class="t-short">Yaşam döngüsü</span></a>
+    <a href="#bakim" id="tab-bakim" role="tab" aria-controls="panel-bakim" aria-selected="false"><span class="t-long">Bakım, Hasar ve Servis</span><span class="t-short">Bakım</span></a>
+    <a href="#maliyet" id="tab-maliyet" role="tab" aria-controls="panel-maliyet" aria-selected="false"><span class="t-long">Maliyet ve Raporlama</span><span class="t-short">Maliyet</span></a>
+    <a href="#telematik" id="tab-telematik" role="tab" aria-controls="panel-telematik" aria-selected="false"><span class="t-long">Telematik ve Kullanım</span><span class="t-short">Telematik</span></a>
+  </nav>
+</header>
+
+<div class="ctx">
+  <div class="wrap ctx-row">
+    <div class="ctl" id="monthCtl"><label for="monthSel">Dönem</label><select id="monthSel"></select></div>
+    <p class="ctx-title" id="ctxTitle"></p>
+    <span class="grow"></span>
+    <button type="button" class="btn-quiet ozet-only" id="targetsBtn" aria-expanded="false" aria-controls="targetsPanel">Hedefler</button>
+    <div class="targets-panel ozet-only" id="targetsPanel" role="dialog" aria-labelledby="targetsTitle" hidden>
+      <div class="tp-h"><h2 id="targetsTitle">Hedefler</h2><button type="button" class="x-btn" id="targetsClose" aria-label="Hedefler panelini kapat">×</button></div>
+      <form id="targetsForm" novalidate>
+        <div id="targetsGrid"></div>
+      </form>
+      <p class="tp-rule">Hedef karşılanırsa durum İyi, sapma uyarı bandındaysa Dikkat, daha büyükse Kritik olur. Süresi geçmiş bir yasal kalem varsa durum her zaman Kritiktir.</p>
+      <button type="button" class="linkbtn" id="targetsReset">Örnek hedeflere dön</button>
+    </div>
+  </div>
+</div>
+
+<noscript><div class="wrap"><p>Bu panel JavaScript ile çalışır. Lütfen tarayıcınızda JavaScript'i etkinleştirin.</p></div></noscript>
+
+<main class="wrap">
+
+<!-- ================= 1. FİLO ÖZETİ ================= -->
+<section id="panel-ozet" class="pane" role="tabpanel" aria-labelledby="tab-ozet">
+  <h2 class="sr-only">Filo Özeti</h2>
+  <div class="kpi-grid" id="kpiGrid"></div>
+  <div class="kpi-mini" id="kpiMini" role="group" aria-label="Diğer göstergeler"></div>
+  <div class="grid-2">
+    <div class="card trend-card">
+      <div class="card-h">
+        <h3>Aylık eğilim</h3>
+        <select id="trendSel" aria-label="Eğilimi gösterilecek gösterge"></select>
+        <div class="legend"><span><i></i>Filo</span><span><i class="tg"></i>Hedef</span></div>
+        <button type="button" class="linkbtn" data-tgl aria-controls="trendTableWrap" aria-expanded="false" data-on="Tabloyu gizle" data-off="Tablo">Tablo</button>
+      </div>
+      <div class="chart-box" id="trendChart"></div>
+      <div class="tbl-wrap" id="trendTableWrap" hidden><table id="trendTable"></table></div>
+    </div>
+    <div class="card">
+      <div class="card-h"><h3>İyileştirme alanları</h3><span class="muted small" id="improvePeriod"></span></div>
+      <div id="improveList"></div>
+    </div>
+  </div>
+  <div class="foot-row">
+    <div class="sample-strip" id="sampleStrip"></div>
+  </div>
+</section>
+
+<!-- ================= 2. ARAÇ YAŞAM DÖNGÜSÜ ================= -->
+<section id="panel-yasam" class="pane" role="tabpanel" aria-labelledby="tab-yasam" hidden>
+  <h2 class="sr-only">Araç Yaşam Döngüsü</h2>
+  <div class="pipe" id="pipe" role="group" aria-label="Yaşam döngüsü aşamaları; tablo seçilen aşamaya göre süzülür"></div>
+  <div class="card tbl-card">
+    <div class="card-h">
+      <h3 id="lcTitle">Araçlar</h3>
+      <div class="filters">
+        <label for="lcBase" class="sr-only">Lokasyon</label><select id="lcBase"></select>
+        <label for="lcType" class="sr-only">Araç türü</label><select id="lcType"></select>
+      </div>
+      <span class="grow"></span>
+      <span class="pop-anchor" id="lcInfo"></span>
+    </div>
+    <p class="card-note" id="lcNote"></p>
+    <div class="tbl-wrap"><table id="lcTable"></table></div>
+    <p class="card-note end"><button type="button" class="linkbtn" id="lcMore" aria-controls="lcTable" aria-expanded="false" hidden>Tümünü göster</button></p>
+  </div>
+</section>
+
+<!-- ================= 3. BAKIM, HASAR VE SERVİS ================= -->
+<section id="panel-bakim" class="pane" role="tabpanel" aria-labelledby="tab-bakim" hidden>
+  <h2 class="sr-only">Bakım, Hasar ve Servis</h2>
+  <div class="kpi-grid" id="calTiles"></div>
+  <div class="card tbl-card">
+    <div class="card-h">
+      <h3>Bakım ve yasal takvim</h3>
+      <div class="filters">
+        <label for="calType" class="sr-only">Araç türü</label><select id="calType"></select>
+        <label for="calBase" class="sr-only">Lokasyon</label><select id="calBase"></select>
+        <label for="calSt" class="sr-only">Durum</label><select id="calSt"></select>
+      </div>
+      <span class="grow"></span>
+      <span class="pop-anchor" id="calInfo"></span>
+    </div>
+    <p class="card-note" id="calCount"></p>
+    <div class="tbl-wrap"><table id="calTable"></table></div>
+    <p class="card-note end"><button type="button" class="linkbtn" id="calMore" aria-controls="calTable" aria-expanded="false" hidden>Tümünü göster</button></p>
+  </div>
+  <div class="card tbl-card">
+    <div class="card-h"><h3 id="claimTitle">Hasar ve sigorta dosyaları</h3><span class="grow"></span><span class="pop-anchor" id="claimInfo"></span></div>
+    <p class="card-note" id="claimNote"></p>
+    <div class="tbl-wrap"><table id="claimTable"></table></div>
+    <p class="card-note end"><button type="button" class="linkbtn" id="claimMore" aria-controls="claimTable" aria-expanded="false" hidden>Tümünü göster</button></p>
+  </div>
+  <div class="card tbl-card">
+    <div class="card-h"><h3 id="svcTitle">Servis sağlayıcı performansı</h3><span class="grow"></span><span class="pop-anchor" id="svcInfo"></span></div>
+    <div class="tbl-wrap"><table id="svcTable"></table></div>
+    <p class="card-note end" id="svcNote"></p>
+  </div>
+</section>
+
+<!-- ================= 4. MALİYET VE RAPORLAMA ================= -->
+<section id="panel-maliyet" class="pane" role="tabpanel" aria-labelledby="tab-maliyet" hidden>
+  <h2 class="sr-only">Maliyet ve Raporlama</h2>
+  <div class="kpi-grid" id="costTiles"></div>
+  <div class="grid-2 even">
+    <div class="card trend-card">
+      <div class="card-h">
+        <h3>Bütçe ve gerçekleşen</h3>
+        <div class="seg" role="group" aria-label="Grafik türü"><button type="button" id="bcMonthly" aria-pressed="true">Aylık</button><button type="button" id="bcCum" aria-pressed="false">Kümülatif</button></div>
+        <div class="legend"><span><i></i>Gerçekleşen</span><span><i class="plan"></i>Bütçe</span><span>milyon TL</span></div>
+      </div>
+      <div class="chart-box" id="budgetChart"></div>
+      <p class="card-note" id="fuelNote" style="margin:6px 0 0"></p>
+    </div>
+    <div class="card tbl-card">
+      <div class="card-h"><h3 id="catTitle">Kalem bazında</h3><span class="muted small">bin TL</span></div>
+      <div class="tbl-wrap"><table id="catTable"></table></div>
+    </div>
+  </div>
+  <div class="grid-2 even">
+    <div class="card tbl-card">
+      <div class="card-h"><h3 id="typeCostTitle">Araç türüne göre TL/km</h3></div>
+      <div class="tbl-wrap"><table id="typeCostTable"></table></div>
+      <p class="card-note end">TL/km = türün dönem toplam maliyeti / türün dönem toplam km değeri. Kiralık araçlarda bakım, lastik, sigorta ve MTV kira bedeline dahildir.</p>
+    </div>
+    <div class="card tbl-card">
+      <div class="card-h"><h3 id="invTitle">Fatura kontrolü</h3><span class="chip na" id="invSummary">—</span></div>
+      <p class="card-note">Fark = fatura tutarı − sözleşmeye göre beklenen tutar. Fark %1'i aşarsa satır İncele olarak işaretlenir. Beklenen tutarlar modelin aylık maliyetleridir ve KDV hariçtir.</p>
+      <div class="tbl-wrap"><table id="invTable"></table></div>
+    </div>
+  </div>
+  <div class="card tbl-card">
+    <div class="card-h"><h3 id="riskTitle">Km aşımı riski</h3><span class="grow"></span><span class="pop-anchor" id="riskInfo"></span></div>
+    <p class="card-note" id="riskNote"></p>
+    <div class="tbl-wrap"><table id="riskTable"></table></div>
+    <p class="card-note end"><button type="button" class="linkbtn" id="riskMore" aria-controls="riskTable" aria-expanded="false" hidden>Tümünü göster</button></p>
+  </div>
+</section>
+
+<!-- ================= 5. TELEMATİK VE KULLANIM ================= -->
+<section id="panel-telematik" class="pane" role="tabpanel" aria-labelledby="tab-telematik" hidden>
+  <h2 class="sr-only">Telematik ve Kullanım</h2>
+  <div class="kpi-grid" id="telTiles"></div>
+  <div class="grid-2 even">
+    <div class="card">
+      <div class="card-h"><h3>Lokasyonlar</h3><span class="muted small">Daire büyüklüğü araç sayısını gösterir</span></div>
+      <p class="map-note" id="mapNote"></p>
+      <div class="map-box" id="mapBox"><div id="map" role="region" aria-label="Lokasyon haritası"></div><div class="sc-info" id="scInfo" aria-live="polite"></div></div>
+      <div class="map-foot"><span>Lokasyonlar örnektir; konumlar il veya ilçe merkezini gösterir.</span></div>
+    </div>
+    <div class="card">
+      <div class="card-h"><h3>Aksiyon önerileri</h3><span class="pop-anchor" id="telRuleInfo"></span></div>
+      <ul class="act-list" id="telActions"></ul>
+      <button type="button" class="linkbtn" id="actMore" aria-controls="telActions" aria-expanded="false" hidden>Tümünü göster</button>
+    </div>
+  </div>
+  <div class="foot-row">
+    <span class="muted small">Telematik verisi örnektir. Zimmetli binek araçlarda mesai dışı kullanım, araç politikası gereği izinli kabul edilir.</span>
+    <button type="button" class="linkbtn" data-tgl aria-controls="telTableWrap" aria-expanded="false" data-on="Araç tablosunu gizle" data-off="Tüm araçların telematik verisi">Tüm araçların telematik verisi</button>
+  </div>
+  <div class="card tbl-card" id="telTableWrap" hidden>
+    <div class="card-h"><h3 id="telTableTitle">Araç bazında telematik verisi</h3></div>
+    <div class="tbl-wrap"><table id="telTable"></table></div>
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <div class="wrap">
+    <p class="contact">Ferhat Acıcı · +90 539 319 1299 (WhatsApp) · sfa.ferhat@gmail.com</p>
+    <p class="foot-note">Bosch Türkiye Fleet Operations Responsible başvurusu için hazırlanmış örnek çalışmadır. Şirketin logosu, renkleri veya markaları kullanılmamıştır; plakalar, lokasyonlar, tutarlar ve tedarikçiler örnektir.</p>
+  </div>
+</footer>
+
+<!-- ================= Saf hesap fonksiyonları (DOM kullanmaz; testlerde doğrudan kullanılır) ================= -->
+<script id="calc">
+var Calc = (function () {
+  'use strict';
+
+  /* ---- Tohumlu rastgele sayı üreteci: her açılışta aynı örnek veri ---- */
+  function mulberry32(a) {
+    return function () {
+      a |= 0; a = (a + 0x6D2B79F5) | 0;
+      var t = Math.imul(a ^ (a >>> 15), 1 | a);
+      t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  }
+  function hashStr(s) {
+    var h = 2166136261;
+    for (var i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); }
+    return h >>> 0;
+  }
+  function hashFrac(s) { return mulberry32(hashStr(s))(); }
+  function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
+  function round2(v) { return Math.round(v * 100) / 100; }
+
+  /* ---- Tarih yardımcıları (UTC gün numarası; saat dilimi etkisi yok) ---- */
+  var DAY = 86400000;
+  function dayNum(iso) { var p = iso.split('-'); return Math.round(Date.UTC(+p[0], +p[1] - 1, +p[2]) / DAY); }
+  function isoOf(dn) { var d = new Date(dn * DAY); return d.getUTCFullYear() + '-' + String(d.getUTCMonth() + 1).padStart(2, '0') + '-' + String(d.getUTCDate()).padStart(2, '0'); }
+  function addDays(iso, n) { return isoOf(dayNum(iso) + n); }
+  function addMonths(iso, n) {
+    var p = iso.split('-'), y = +p[0], m = +p[1] - 1 + n, d = +p[2];
+    y += Math.floor(m / 12); m = ((m % 12) + 12) % 12;
+    var last = new Date(Date.UTC(y, m + 1, 0)).getUTCDate();
+    return y + '-' + String(m + 1).padStart(2, '0') + '-' + String(Math.min(d, last)).padStart(2, '0');
+  }
+  function daysBetween(a, b) { return dayNum(b) - dayNum(a); }
+
+  /* Tarih durumu: vade referans tarihten önceyse "over" (süresi geçti),
+     0–30 gün içindeyse "soon", daha ileriyse "ok". */
+  function dateStatus(dueIso, refIso) {
+    var d = daysBetween(refIso, dueIso);
+    if (d < 0) { return 'over'; }
+    if (d <= 30) { return 'soon'; }
+    return 'ok';
+  }
+
+  /* ---- Dönem: Kasım 2025 – Ekim 2026; anlık durum tarihi 31.10.2026 ---- */
+  var MONTH_NAMES = ['Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran', 'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık'];
+  var MONTH_SHORT = ['Oca', 'Şub', 'Mar', 'Nis', 'May', 'Haz', 'Tem', 'Ağu', 'Eyl', 'Eki', 'Kas', 'Ara'];
+  var MONTHS = [];
+  for (var i = 0; i < 12; i++) {
+    var mo = (10 + i) % 12, yr = 2025 + Math.floor((10 + i) / 12);
+    var days = new Date(Date.UTC(yr, mo + 1, 0)).getUTCDate();
+    MONTHS.push({ idx: i, year: yr, mon: mo, days: days, label: MONTH_NAMES[mo] + ' ' + yr, short: MONTH_SHORT[mo] + ' ' + String(yr).slice(2),
+      start: yr + '-' + String(mo + 1).padStart(2, '0') + '-01', end: yr + '-' + String(mo + 1).padStart(2, '0') + '-' + String(days).padStart(2, '0') });
+  }
+  var REF = MONTHS[11].end;
+  /* Motorin pompa fiyatı (TL/L, KDV dahil): örnek seri; Kasım 2026 Bursa pompa fiyatına (96,14 TL/L) göre ölçeklenmiştir.
+     Modelde bütün tutarlar KDV hariçtir: yakıt maliyeti = litre × pompa fiyatı / 1,20 × (1 − %3 yakıt kartı iskontosu). */
+  var FUEL_PRICE = [62.4, 63.6, 65.1, 66.9, 69.0, 71.6, 74.5, 77.7, 81.2, 85.0, 89.3, 94.2];
+  var FUEL_NOV26 = 96.14, VAT = 0.20, FUEL_DISCOUNT = 0.03;
+  /* Bütçe dönem başında kuruldu: motorin için ayda %1,6 artış öngörülmüştü (plan fiyatı, KDV dahil) */
+  var BUDGET_FUEL = []; for (var bf = 0; bf < 12; bf++) { BUDGET_FUEL.push(Math.round(62.4 * Math.pow(1.016, bf) * 100) / 100); }
+  function fuelNet(m, price) { return (price == null ? FUEL_PRICE[m] : price) / (1 + VAT) * (1 - FUEL_DISCOUNT); }
+  /* Mevsim etkisi: yaz tatili aylarında kullanım düşer */
+  var SEASON = [1.0, 0.94, 0.97, 1.0, 1.02, 1.0, 1.0, 1.02, 0.93, 0.88, 1.03, 1.03];
+  var MUAYENE_FEE = 3300;
+  var PRE_RENT = 0.8; /* yerine gelinen önceki aracın kirası, yeni aracın kirasına oranla */
+
+  /* ---- Araç türleri (değerler örnektir) ----
+     assign: zimmet = kullanıcıya zimmetli, havuz = havuz aracı. private: araç politikası mesai dışı özel kullanıma izin verir. */
+  var TYPES = [
+    { id: 'yonetici', name: 'Binek – yönetici aracı (zimmetli)', short: 'Yönetici', assign: 'zimmet', private: true, dept: 'Yönetim', kmDay: 85, l100: 6.2, idleLph: 0.7, rent: 98000, kmYear: 30000, pmKm: 15000, pmCost: 19000, tireSet: 52000, trafik: 14500, kasko: 125000, mtv: 26000, muayeneFirst: 36, muayeneM: 24, leaseP: 0.95, u: [0.72, 0.92], hgs: 0.32 },
+    { id: 'satis', name: 'Binek – satış ve saha aracı (zimmetli)', short: 'Satış', assign: 'zimmet', private: true, dept: 'Satış', kmDay: 150, l100: 5.6, idleLph: 0.7, rent: 64000, kmYear: 45000, pmKm: 15000, pmCost: 13500, tireSet: 31000, trafik: 13500, kasko: 72000, mtv: 12500, muayeneFirst: 36, muayeneM: 24, leaseP: 0.9, u: [0.74, 0.94], hgs: 0.42 },
+    { id: 'havuz', name: 'Binek – havuz aracı', short: 'Havuz', assign: 'havuz', private: false, dept: 'Havuz', kmDay: 105, l100: 5.9, idleLph: 0.7, rent: 56000, kmYear: 30000, pmKm: 15000, pmCost: 12500, tireSet: 28000, trafik: 13500, kasko: 61000, mtv: 10500, muayeneFirst: 36, muayeneM: 24, leaseP: 0.75, u: [0.55, 0.86], hgs: 0.36 },
+    { id: 'hafif', name: 'Hafif ticari – servis ve teknik ekip', short: 'Hafif ticari', assign: 'zimmet', private: false, dept: 'Teknik servis', kmDay: 125, l100: 7.4, idleLph: 0.9, rent: 60000, kmYear: 40000, pmKm: 15000, pmCost: 14500, tireSet: 34000, trafik: 18000, kasko: 66000, mtv: 7600, muayeneFirst: 24, muayeneM: 12, leaseP: 0.72, u: [0.7, 0.92], hgs: 0.28 }
+  ];
+  var TYPE = {}; TYPES.forEach(function (t) { TYPE[t.id] = t; });
+
+  /* ---- Lokasyonlar (örnek; koordinat il veya ilçe merkezi) ---- */
+  var BASES = [
+    { id: 'atasehir', name: 'İstanbul – Ataşehir ofis', short: 'Ataşehir', plate: '34', lat: 40.9923, lon: 29.1244, mix: [14, 16, 6, 4], pmLate: 0.02, reqF: 1.0, sx: 16, sy: 0 },
+    { id: 'kagithane', name: 'İstanbul – Kağıthane ofis', short: 'Kağıthane', plate: '34', lat: 41.0857, lon: 28.9726, mix: [6, 12, 4, 6], pmLate: 0.09, reqF: 1.3, sx: -16, sy: -8 },
+    { id: 'bursa', name: 'Bursa – üretim tesisi (örnek)', short: 'Bursa', plate: '16', lat: 40.1950, lon: 29.0600, mix: [6, 4, 8, 14], pmLate: 0.03, reqF: 1.0, sx: 0, sy: 0 },
+    { id: 'manisa', name: 'Manisa – saha (örnek)', short: 'Manisa', plate: '45', lat: 38.6191, lon: 27.4289, mix: [2, 2, 3, 5], pmLate: 0.04, reqF: 1.15, sx: 0, sy: 0 },
+    { id: 'ankara', name: 'Ankara – bölge ofisi', short: 'Ankara', plate: '06', lat: 39.9334, lon: 32.8597, mix: [2, 4, 1, 1], pmLate: 0.03, reqF: 1.05, sx: 0, sy: 0 }
+  ];
+  var BASE = {}; BASES.forEach(function (b) { BASE[b.id] = b; });
+
+  /* ---- Kiralama firmaları (örnek); fee = sözleşmedeki km aşım bedeli (TL/km) ---- */
+  var LESSORS = [
+    { id: 'A', name: 'Kiralama firması A', fee: 4.2 },
+    { id: 'B', name: 'Kiralama firması B', fee: 4.8 },
+    { id: 'C', name: 'Kiralama firması C', fee: 3.9 }
+  ];
+  var LESSOR = {}; LESSORS.forEach(function (l) { LESSOR[l.id] = l; });
+
+  var CATS = [
+    { id: 'kira', name: 'Kira (operasyonel kiralama)' }, { id: 'yakit', name: 'Yakıt' }, { id: 'bakim', name: 'Bakım-onarım' }, { id: 'lastik', name: 'Lastik' },
+    { id: 'hasar', name: 'Hasar ve muafiyet' }, { id: 'hgs', name: 'HGS/OGS, köprü ve otoyol' }, { id: 'ceza', name: 'Trafik cezaları' }, { id: 'sigorta', name: 'Özmal sigorta, MTV ve muayene' },
+    { id: 'iade', name: 'İade hasar bedeli' }
+  ];
+  function emptyCost() { var c = {}; CATS.forEach(function (k) { c[k.id] = 0; }); return c; }
+  function costTotal(c) { var s = 0; CATS.forEach(function (k) { s += c[k.id]; }); return s; }
+
+  /* ---- Yaşam döngüsü kontrol listeleri ---- */
+  /* Sıra bağımlıdır: bir adım tamamlanmadan sonraki adım tamamlanmış sayılamaz */
+  var ONB_ITEMS = [
+    { id: 'noter', name: 'Noter satış/devir' }, { id: 'ruhsat', name: 'Ruhsat ve tescil' }, { id: 'trafik', name: 'Trafik sigortası' }, { id: 'kasko', name: 'Kasko' },
+    { id: 'yakit', name: 'Yakıt kartı' }, { id: 'hgs', name: 'HGS/OGS' }, { id: 'utts', name: 'UTTS tanımlama' }, { id: 'teslim', name: 'Teslim tutanağı ve kullanıcı bilgilendirme' }
+  ];
+  var RET_ITEMS = [
+    { id: 'eksper', name: 'Hasar tespiti (ekspertiz)' }, { id: 'utts', name: 'UTTS cihazının sökümü' }, { id: 'km', name: 'Km ve fotoğraf kaydı' },
+    { id: 'yakit', name: 'Yakıt kartı iptali' }, { id: 'hgs', name: 'HGS/OGS iptali' }, { id: 'evrak', name: 'Ruhsat, anahtar ve evrak teslimi' }, { id: 'tutanak', name: 'İade tutanağı' }
+  ];
+  /* Bir iadede kalemin tamamlanmış sayılması için sözleşme bitişine kalan en fazla gün */
+  var RET_TH = { eksper: 30, utts: 14, km: 5, hgs: 3, yakit: 3, evrak: 0, tutanak: -1 };
+  var ONB_DAYS = 60, RET_DAYS = 90;
+
+  /* Kontrol listesi: yalnızca değeri true olan kalem tamamlanmış sayılır */
+  /* Sıra tutarlılığı: tamamlanmamış bir adımdan sonra tamamlanmış adım varsa false */
+  function checklistOrdered(items, done) {
+    var gap = false, ok = true;
+    items.forEach(function (it) { var d = !!done && done[it.id] === true; if (!d) { gap = true; } else if (gap) { ok = false; } });
+    return ok;
+  }
+  function checklist(items, done) {
+    var ok = items.filter(function (it) { return !!done && done[it.id] === true; });
+    return { done: ok.length, total: items.length, pct: items.length ? ok.length / items.length * 100 : 100, complete: ok.length === items.length,
+      missing: items.filter(function (it) { return !(done && done[it.id] === true); }).map(function (it) { return it.name; }) };
+  }
+
+  /* ---- Filo üretimi ---- */
+  var PLATE_LETTERS = 'ABCDEFGHJKLMNPRSTUVYZ';
+  function dailyCal(v) { var t = TYPE[v.type]; return t.kmDay * v.u * v.kmF; } /* takvim günü başına ortalama km */
+  function generateFleet() {
+    var rng = mulberry32(20261109), used = {}, list = [], n = 0;
+    BASES.forEach(function (b) {
+      b.mix.forEach(function (cnt, ti) {
+        var t = TYPES[ti];
+        for (var j = 0; j < cnt; j++) {
+          n++;
+          var plate;
+          do {
+            plate = b.plate + ' ' + PLATE_LETTERS[Math.floor(rng() * 21)] + PLATE_LETTERS[Math.floor(rng() * 21)] + PLATE_LETTERS[Math.floor(rng() * 21)] + ' ' + (100 + Math.floor(rng() * 900));
+          } while (used[plate]);
+          used[plate] = 1;
+          list.push({
+            id: 'v' + String(n).padStart(3, '0'), plate: plate, type: t.id, base: b.id, own: rng() < t.leaseP ? 'Kiralık' : 'Özmal',
+            u: t.u[0] + rng() * (t.u[1] - t.u[0]), kmF: 0.85 + rng() * 0.3, idle: 0.04 + rng() * 0.08,
+            off: t.private ? 0.10 + rng() * 0.14 : 0.01 + rng() * 0.05, harsh: 0.3 + rng() * 2.2, allSeason: rng() < 0.45,
+            term: rng() < 0.6 ? 36 : 48, lessor: LESSORS[Math.floor(rng() * LESSORS.length)].id, endF: rng(), regF: rng(),
+            sicil: 'P-' + (1000 + Math.floor(rng() * 9000))
+          });
+        }
+      });
+    });
+    function pick(type, base, k) { var c = list.filter(function (v) { return v.type === type && v.base === base; }); return c[k % c.length]; }
+    /* Bilinçli örnek durumlar: yeni gelen araçlar (eksik evrak), sözleşmesi biten araçlar, az kullanılan araçlar ve sürüş sapmaları */
+    var NEW = [
+      ['yonetici', 'atasehir', 1, '2026-10-26', 48, 'yakit'],
+      ['hafif', 'bursa', 1, '2026-10-12', 48, 'utts'],
+      ['satis', 'atasehir', 2, '2026-10-05', 36, 'hgs'],
+      ['havuz', 'kagithane', 0, '2026-09-22', 36, null],
+      ['satis', 'ankara', 1, '2026-09-08', 36, 'teslim']
+    ];
+    NEW.forEach(function (f) { var v = pick(f[0], f[1], f[2]); v.own = 'Kiralık'; v.start = f[3]; v.term = f[4]; v.firstMissing = f[5]; });
+    var ENDS = [
+      ['satis', 'bursa', 0, '2026-10-25', 36, null],
+      ['yonetici', 'kagithane', 0, '2026-11-18', 36, null],
+      ['havuz', 'bursa', 0, '2026-11-30', 36, null],
+      ['satis', 'atasehir', 0, '2026-12-12', 36, 1.15],
+      ['hafif', 'manisa', 0, '2027-01-20', 48, 1.2]
+    ];
+    ENDS.forEach(function (f) { var v = pick(f[0], f[1], f[2]); v.own = 'Kiralık'; v.end = f[3]; v.term = f[4]; if (f[5]) { v.kmF = f[5]; } });
+    pick('yonetici', 'atasehir', 3).u = 0.34;
+    pick('satis', 'kagithane', 2).u = 0.38;
+    pick('havuz', 'manisa', 0).u = 0.30;
+    pick('havuz', 'bursa', 5).u = 0.33;
+    pick('havuz', 'kagithane', 1).off = 0.21;
+    pick('hafif', 'bursa', 2).off = 0.17;
+    pick('satis', 'atasehir', 5).harsh = 9.5;
+    pick('hafif', 'kagithane', 0).harsh = 8.2;
+    pick('hafif', 'manisa', 1).idle = 0.27;
+    pick('satis', 'ankara', 0).idle = 0.23;
+    pick('hafif', 'bursa', 3).force = { muayene: { due: '2026-10-19', delay: 25 } };
+
+    var refN = dayNum(REF), base0 = dayNum('2022-11-01');
+    list.forEach(function (v) {
+      var t = TYPE[v.type];
+      if (v.own === 'Kiralık') {
+        if (!v.start && !v.end) {
+          var lo = refN + 100, hi = dayNum(addMonths(REF, v.term)) - ONB_DAYS;
+          v.end = isoOf(lo + Math.floor(v.endF * (hi - lo)));
+        }
+        if (!v.start) { v.start = addMonths(v.end, -v.term); }
+        if (!v.end) { v.end = addMonths(v.start, v.term); }
+        v.reg = v.start;
+        var prog = clamp((dayNum(v.start) - base0) / (refN - base0), 0, 1);
+        v.rent = Math.round(t.rent * (0.42 + 0.58 * prog) * (0.92 + hashFrac(v.id + '|rent') * 0.16) / 500) * 500;
+        v.kmLimit = t.kmYear * v.term / 12;
+        v.fee = LESSOR[v.lessor].fee;
+      } else {
+        v.reg = isoOf(refN - 420 - Math.floor(v.regF * 1500));
+        v.start = v.reg; v.end = null; v.rent = 0; v.kmLimit = null; v.lessor = null; v.fee = null;
+      }
+      v.year = +v.reg.slice(0, 4);
+      var before = Math.max(0, daysBetween(v.reg, MONTHS[0].start));
+      v.odoStart = Math.round((before * dailyCal(v) + 20 + hashFrac(v.id + '|deliv') * 60) / 10) * 10;
+      /* Filoya giriş kontrol listesi: ilk eksik adımdan sonraki bütün adımlar da eksiktir (yalnızca bilinçli örneklerde) */
+      v.onb = {}; var blocked = false;
+      ONB_ITEMS.forEach(function (it) { if (it.id === v.firstMissing) { blocked = true; } v.onb[it.id] = !blocked; });
+      /* İade kontrol listesi: sözleşme bitişine yaklaştıkça kalemler tamamlanır */
+      v.retDone = null;
+      if (v.end) {
+        var left = daysBetween(REF, v.end);
+        v.retDone = {}; RET_ITEMS.forEach(function (it) { v.retDone[it.id] = left <= RET_TH[it.id]; });
+        if (left < 0) {
+          /* Gecikmiş iade: yeni araç gelmediği için kullanıcı aracı kullanmaya devam ediyor */
+          ['utts', 'km', 'yakit', 'hgs', 'evrak', 'tutanak'].forEach(function (k) { v.retDone[k] = false; });
+          v.lateReason = 'Yerine gelecek araç teslim edilmedi; kullanıcı aracı kullanmaya devam ediyor.';
+        }
+      }
+      delete v.endF; delete v.regF;
+    });
+    return list;
+  }
+
+  /* ---- Yaşam döngüsü aşaması (referans tarihte) ---- */
+  function stageOf(v, ref) {
+    if (v.start > ref) { return null; }
+    if (daysBetween(v.start, ref) <= ONB_DAYS && !checklist(ONB_ITEMS, v.onb).complete) { return 'giris'; }
+    if (v.own === 'Kiralık' && daysBetween(ref, v.end) <= RET_DAYS) { return 'iade'; }
+    return 'kullanim';
+  }
+
+  /* ---- Siparişler: sözleşmesi biten her aracın yerine bir araç ve iki yeni ihtiyaç ---- */
+  function generateOrders(fleet) {
+    var out = [];
+    fleet.filter(function (v) { return v.own === 'Kiralık' && daysBetween(REF, v.end) <= RET_DAYS; })
+      .sort(function (a, b) { return a.end < b.end ? -1 : 1; })
+      .forEach(function (v) {
+        var late = daysBetween(REF, v.end) < 0;
+        out.push({ type: v.type, base: v.base, lessor: v.lessor, rent: Math.round(TYPE[v.type].rent * (1.02 + hashFrac(v.id + '|ord') * 0.08) / 500) * 500,
+          expected: late ? '2026-10-20' : addDays(v.end, -9 + Math.floor(hashFrac(v.id + '|ordd') * 8)), reason: v.plate + ' yerine', replaces: v.id });
+      });
+    out.push({ type: 'satis', base: 'ankara', lessor: 'C', rent: 49500, expected: '2026-11-24', reason: 'Yeni satış pozisyonu', replaces: null });
+    out.push({ type: 'hafif', base: 'bursa', lessor: 'A', rent: 47000, expected: '2026-12-08', reason: 'Yeni teknik servis ekibi', replaces: null });
+    out.forEach(function (o, i) { o.no = 'SP-26' + String(41 + i).padStart(3, '0'); });
+    return out;
+  }
+  function orderStatus(o, ref) {
+    var d = daysBetween(ref, o.expected);
+    if (d < 0) { return 'Gecikmede'; }
+    if (d <= 14) { return 'Teslime hazırlanıyor'; }
+    return 'Sipariş verildi';
+  }
+
+  /* ---- Takvim kalemleri: bakım, yasal ve operasyonel yükümlülükler ----
+     kpi = true olanlar Filo Özeti'ndeki "30 gün içinde dolan kalem" sayısına girer. */
+  var OBLIGATIONS = [
+    { id: 'pm', name: 'Periyodik bakım', short: 'Bakım', kpi: false },
+    { id: 'muayene', name: 'Araç muayenesi', short: 'Muayene', kpi: true },
+    { id: 'lastik', name: 'Mevsimsel lastik değişimi', short: 'Lastik', kpi: false },
+    { id: 'yol', name: 'Yol yardım paketi', short: 'Yol yardım', kpi: true },
+    { id: 'trafik', name: 'Trafik sigortası', short: 'Trafik sig.', kpi: true },
+    { id: 'kasko', name: 'Kasko', short: 'Kasko', kpi: true },
+    { id: 'mtv', name: 'MTV taksiti', short: 'MTV', kpi: true }
+  ];
+  var LATE_P = { muayene: 0.05, lastik: 0.12, yol: 0.04, trafik: 0, kasko: 0.02, mtv: 0.03 };
+  var LESSOR_RENEW = { trafik: 1, kasko: 1, yol: 1 };
+
+  function applies(v, obId) {
+    if (obId === 'mtv') { return v.own === 'Özmal'; }
+    if (obId === 'lastik') { return !v.allSeason; }
+    return true;
+  }
+  /* Periyodik bakım aralığı (gün) = bakım km aralığı / takvim günü başına ortalama km (60–365 gün) */
+  function pmDays(v) { return clamp(Math.round(TYPE[v.type].pmKm / dailyCal(v)), 60, 365); }
+  /* k. vadenin tarihi */
+  function occDue(v, obId, k) {
+    var t = TYPE[v.type];
+    if (obId === 'pm') { return addDays(v.reg, (k + 1) * pmDays(v)); }
+    if (obId === 'muayene') {
+      if (v.force && v.force.muayene) {
+        var per = t.muayeneM, first = addMonths(v.reg, t.muayeneFirst), fa = v.force.muayene.due;
+        while (addMonths(fa, -per) >= first) { fa = addMonths(fa, -per); }
+        return addMonths(fa, k * per);
+      }
+      return addMonths(v.reg, t.muayeneFirst + k * t.muayeneM);
+    }
+    if (obId === 'lastik') {
+      var y0 = v.year - 1, winter = k % 2 === 0, y = y0 + Math.floor(k / 2) + (winter ? 0 : 1);
+      /* Kış lastiği son tarihi 1 Aralık (değişim Kasım'da planlanır); yaz lastiği 1–15 Nisan */
+      return winter ? y + '-12-01' : addDays(y + '-04-01', Math.floor(hashFrac(v.id + '|ts') * 15));
+    }
+    if (obId === 'mtv') { return (v.year + Math.floor(k / 2)) + (k % 2 === 0 ? '-01-31' : '-07-31'); }
+    if (obId === 'kasko' && v.own === 'Özmal') { return addMonths(v.reg, 1 + Math.floor(hashFrac(v.id + '|kasko') * 11) + 12 * k); }
+    return addMonths(v.reg, 12 * (k + 1));
+  }
+  /* k. vadenin gecikmesi (gün) */
+  function occDelay(v, obId, k) {
+    if (v.force && v.force[obId] && occDue(v, obId, k) === v.force[obId].due) { return v.force[obId].delay; }
+    var p = obId === 'pm' ? 0.02 + BASE[v.base].pmLate : LATE_P[obId];
+    if (hashFrac(v.id + '|' + obId + '|' + k) >= p) { return 0; }
+    return 3 + Math.floor(hashFrac(v.id + '|' + obId + '|' + k + '|d') * 55);
+  }
+  /* Referans tarihte açık olan vade: tescil tarihinden sonraki, henüz yapılmamış ilk vade */
+  function openItem(v, obId, refIso) {
+    if (!applies(v, obId) || v.start > refIso) { return null; }
+    for (var k = 0; k < 160; k++) {
+      var due = occDue(v, obId, k);
+      if (due < v.reg) { continue; }
+      if (v.end && due >= v.end) { return null; }
+      if (addDays(due, occDelay(v, obId, k)) > refIso) {
+        return { ob: obId, due: due, status: dateStatus(due, refIso), days: daysBetween(refIso, due) };
+      }
+    }
+    return null;
+  }
+  /* Bir ayda vadesi gelen kalemler (araç filoya girdikten sonra) */
+  function occInMonth(v, obId, m) {
+    var res = [];
+    if (!applies(v, obId)) { return res; }
+    var M = MONTHS[m];
+    for (var k = 0; k < 160; k++) {
+      var due = occDue(v, obId, k);
+      if (due > M.end || (v.end && due >= v.end)) { break; }
+      if (due >= M.start && due >= v.start) { res.push({ k: k, due: due, delay: occDelay(v, obId, k) }); }
+    }
+    return res;
+  }
+
+  /* ---- Aracın ay içinde filoda olduğu gün sayısı ---- */
+  function activeDays(v, m) {
+    var M = MONTHS[m], s = v.start > M.start ? v.start : M.start;
+    return s > M.end ? 0 : daysBetween(s, M.end) + 1;
+  }
+  function overlapDays(aIso, bIso, m) {
+    var M = MONTHS[m], s = aIso > M.start ? aIso : M.start, e = bIso < M.end ? bIso : M.end;
+    return s > e ? 0 : daysBetween(s, e) + 1;
+  }
+
+  /* ---- Hasar dosyaları ----
+     Şirket payı (muafiyet): kusurlu kazada sözleşmedeki muafiyet tutarı, kısmi kusurda yarısı, kusursuz kazada sıfır.
+     Araç ekspertiz ve onarım süresince (2 + onarım günü) kullanılamaz. */
+  var DEDUCTIBLE = { 'Kiralık': 30000, 'Özmal': 25000 };
+  function makeClaim(v, m, date, fault) {
+    var M = MONTHS[m];
+    function h(s) { return hashFrac(v.id + '|cl|' + m + '|' + s); }
+    if (!date) {
+      var first = v.start > M.start ? v.start : M.start;
+      date = addDays(first, Math.floor(h('d') * (daysBetween(first, M.end) + 1)));
+    }
+    if (!fault) { var f = h('f'); fault = f < 0.45 ? 'Kusurlu' : (f < 0.8 ? 'Kusursuz' : 'Kısmi kusur'); }
+    var amount = Math.round((14000 + Math.pow(h('a'), 1.6) * 320000) / 100) * 100;
+    var ded0 = DEDUCTIBLE[v.own];
+    var cover = fault === 'Kusursuz' ? 'Karşı tarafın trafik sigortası' : (amount <= ded0 ? 'Şirket öder (muafiyet altı)' : 'Kasko');
+    var promised = Math.round(4 + amount / 30000);
+    var repairDays = h('late') > 0.8 ? promised + 1 + Math.floor(h('r') * 5) : Math.max(2, promised - Math.floor(h('r') * 2));
+    var ded = DEDUCTIBLE[v.own];
+    var share = fault === 'Kusursuz' ? 0 : (fault === 'Kusurlu' || amount <= ded ? Math.min(amount, ded) : Math.round(ded / 2));
+    var downDays = 2 + repairDays;
+    var sub = TYPE[v.type].assign === 'havuz' ? 0 : Math.max(0, downDays - Math.floor(h('s') * 3));
+    var settle = cover === 'Kasko' ? 7 + Math.floor(h('t') * 20) : (fault === 'Kusursuz' ? 20 + Math.floor(h('t') * 40) : 0);
+    return { v: v.id, m: m, date: date, fault: fault, cover: cover, amount: amount, share: share, promised: promised, repairDays: repairDays, downDays: downDays, subDays: sub, settle: settle };
+  }
+  function generateClaims(fleet) {
+    var out = [], has = {};
+    fleet.forEach(function (v) {
+      for (var m = 0; m < 12; m++) {
+        var ad = activeDays(v, m); if (!ad) { continue; }
+        var p = (0.0125 + 0.0024 * v.harsh) * ad / MONTHS[m].days;
+        if (hashFrac(v.id + '|acc|' + m) < p) { out.push(makeClaim(v, m)); has[v.id + '|' + m] = 1; }
+      }
+    });
+    /* Ekim 2026'da açık kalan iki örnek dosya */
+    function pick(type, base, k) { var c = fleet.filter(function (v) { return v.type === type && v.base === base; }); return c[k % c.length]; }
+    [[pick('satis', 'kagithane', 4), '2026-10-21', 'Kusurlu'], [pick('hafif', 'atasehir', 1), '2026-10-28', 'Kusursuz']].forEach(function (f) {
+      if (!has[f[0].id + '|11']) { out.push(makeClaim(f[0], 11, f[1], f[2])); }
+    });
+    out.sort(function (a, b) { return a.date < b.date ? -1 : (a.date > b.date ? 1 : (a.v < b.v ? -1 : 1)); });
+    out.forEach(function (c, i) { c.no = 'HD-' + String(i + 1).padStart(3, '0'); });
+    return out;
+  }
+  function claimStatus(c, ref) {
+    if (c.date > ref) { return null; }
+    var d = daysBetween(c.date, ref);
+    if (d < 2) { return 'Ekspertiz bekleniyor'; }
+    if (d < 2 + c.repairDays) { return 'Onarımda'; }
+    if (d < 2 + c.repairDays + c.settle) { return 'Ödeme bekleniyor'; }
+    return 'Kapandı';
+  }
+
+  /* ---- Kullanıcı talepleri: kategori ve ortalama karşılama süresi (saat, örnek) ---- */
+  var REQ_TYPES = {
+    havuz: { name: 'Havuz aracı talebi', h: 3 }, ariza: { name: 'Arıza ve yol yardım', h: 2 }, ikame: { name: 'İkame araç', h: 9 },
+    kart: { name: 'Yakıt kartı, HGS/OGS veya UTTS sorunu', h: 18 }, evrak: { name: 'Evrak, ceza ve bilgi talebi', h: 14 }
+  };
+
+  /* ---- Aylık simülasyon (araç × ay) ---- */
+  function simulate(fleet, claims) {
+    var byV = {};
+    claims.forEach(function (c) { (byV[c.v] = byV[c.v] || []).push(c); });
+    var rec = [];
+    for (var m = 0; m < 12; m++) {
+      var row = {};
+      fleet.forEach(function (v) {
+        /* Araç yeni geldiyse ayın önceki günlerinde aynı kullanıcı, yerine geldiği önceki aracı kullanır (araç yeri sürekli doludur). */
+        var t = TYPE[v.type], M = MONTHS[m], ad = M.days, ownD = activeDays(v, m), preD = ad - ownD;
+        function h(p) { return hashFrac(v.id + '|' + p + '|' + m); }
+        var r = { days: ad, down: 0, avail: 0, used: 0, km: 0, fuelL: 0, engineH: 0, idleH: 0, offKm: 0, harsh: 0, speed: 0, pmDue: 0, pmOnTime: 0,
+          brk: 0, brkDays: 0, road: 0, tyre: 0, repair: 0, fines: 0, reqN: 0, reqH: 0, subDays: 0, ownDays: ownD, cost: emptyCost() };
+        row[v.id] = r;
+        var own = v.own === 'Özmal', age = daysBetween(v.reg, M.end) / 365;
+        var pms = occInMonth(v, 'pm', m);
+        var down = pms.length;
+        if (h('brk') < 0.03 + 0.008 * age) {
+          r.brk = 1; r.brkDays = 1 + Math.floor(h('brkd') * 4); down += r.brkDays; r.road = h('road') < 0.55 ? 1 : 0;
+          if (own) { r.repair = Math.round(4000 + h('rep') * 26000 * (1 + age * 0.1)); }
+        }
+        var myClaims = byV[v.id] || [];
+        myClaims.forEach(function (c) {
+          down += overlapDays(c.date, addDays(c.date, c.downDays - 1), m);
+          if (c.subDays > 0) { r.subDays += overlapDays(c.date, addDays(c.date, c.subDays - 1), m); }
+        });
+        down = Math.min(ad, down);
+        var avail = ad - down;
+        var used = Math.min(avail, Math.round(avail * v.u * SEASON[m] * (0.93 + h('use') * 0.14)));
+        var km = Math.round(used * t.kmDay * v.kmF * (0.85 + h('km') * 0.3));
+        var moveH = km / 42, idle = clamp(v.idle * (1.05 - 0.01 * m), 0.02, 0.4), idleH = moveH * idle / (1 - idle);
+        var fuelL = km * t.l100 / 100 * (0.96 + h('fuel') * 0.08) + idleH * t.idleLph;
+        r.down = down; r.avail = avail; r.used = used; r.km = km; r.fuelL = round2(fuelL);
+        r.engineH = round2(moveH + idleH); r.idleH = round2(idleH);
+        r.offKm = Math.round(km * clamp(v.off * (0.85 + h('off') * 0.3), 0, 0.6));
+        r.harsh = Math.round(km / 1000 * v.harsh * (0.7 + h('harsh') * 0.6));
+        r.speed = Math.round(km / 1000 * v.harsh * 0.6 * (0.6 + h('speed') * 0.8));
+        r.pmDue = pms.length; r.pmOnTime = pms.filter(function (p) { return p.delay === 0; }).length;
+        r.tyre = occInMonth(v, 'lastik', m).length;
+        var c = r.cost;
+        /* Kiralık araçta bakım, lastik, sigorta ve MTV kira bedeline dahildir */
+        if (!own) { c.kira = Math.round((v.rent * ownD + v.rent * PRE_RENT * preD) / M.days); }
+        c.yakit = Math.round(fuelL * fuelNet(m));
+        if (own) {
+          c.bakim = pms.length * t.pmCost + r.repair;
+          c.lastik = r.tyre * 1500 + (h('tire') < km / 55000 ? t.tireSet : 0);
+          c.sigorta = Math.round((t.trafik + t.kasko) / 12 * ad / M.days) + occInMonth(v, 'mtv', m).length * Math.round(t.mtv / 2) + occInMonth(v, 'muayene', m).length * MUAYENE_FEE;
+        }
+        myClaims.forEach(function (cl) { if (cl.m === m) { c.hasar += cl.share; } });
+        c.hgs = Math.round(km * t.hgs);
+        /* Yeni araç geldiğinde önceki kiralık araç iade edildi: iade ekspertizindeki hasar bedeli */
+        if (!own && ownD > 0 && preD > 0) { c.iade = Math.round((6000 + h('iade') * 42000) / 100) * 100; }
+        if (h('fine') < 0.01 + r.speed * 0.012) { r.fines = 1; c.ceza = 1500 + Math.floor(h('finea') * 35) * 100; }
+        /* Kullanıcı talepleri */
+        var reqs = [];
+        if (t.assign === 'havuz') { for (var q = 0; q < Math.round(used / 3); q++) { reqs.push('havuz'); } }
+        if (r.brk) { reqs.push('ariza'); }
+        if (r.subDays > 0) { reqs.push('ikame'); }
+        if (h('rq1') < 0.12) { reqs.push('kart'); }
+        if (h('rq2') < 0.10) { reqs.push('evrak'); }
+        var trendF = 1.12 - 0.022 * m;
+        reqs.forEach(function (cat, i) { r.reqN++; r.reqH += REQ_TYPES[cat].h * BASE[v.base].reqF * trendF * (0.6 + h('rqh' + i) * 0.8); });
+        r.reqH = round2(r.reqH);
+      });
+      rec.push(row);
+    }
+    return rec;
+  }
+
+  /* ---- Toplamlar ---- */
+  function sumMonth(fleet, rec, m, filter) {
+    var s = { n: 0, vehDays: 0, down: 0, avail: 0, used: 0, km: 0, fuelL: 0, engineH: 0, idleH: 0, offKm: 0, harsh: 0, speed: 0,
+      poolUsed: 0, poolAvail: 0, kmP: 0, offKmP: 0, pmDue: 0, pmOnTime: 0, reqN: 0, reqH: 0, subDays: 0, cost: emptyCost(), total: 0 };
+    fleet.forEach(function (v) {
+      if (filter && !filter(v)) { return; }
+      var r = rec[m][v.id], t = TYPE[v.type];
+      if (!r.days) { return; }
+      s.n++; s.vehDays += r.days; s.down += r.down; s.avail += r.avail; s.used += r.used; s.km += r.km; s.fuelL += r.fuelL;
+      s.engineH += r.engineH; s.idleH += r.idleH; s.offKm += r.offKm; s.harsh += r.harsh; s.speed += r.speed;
+      s.pmDue += r.pmDue; s.pmOnTime += r.pmOnTime; s.reqN += r.reqN; s.reqH += r.reqH; s.subDays += r.subDays;
+      if (t.assign === 'havuz') { s.poolUsed += r.used; s.poolAvail += r.avail; }
+      if (!t.private) { s.kmP += r.km; s.offKmP += r.offKm; }
+      CATS.forEach(function (c) { s.cost[c.id] += r.cost[c.id]; });
+      s.total += costTotal(r.cost);
+    });
+    return s;
+  }
+  function ratio(n, d, mult) { return d > 0 ? n / d * mult : null; }
+
+  /* ---- Göstergeler ---- */
+  var KPIS = [
+    { id: 'avail', name: 'Araç kullanılabilirliği', unit: '%', dir: 'up', target: 98.5, dec: 1, band: { type: 'pt', warn: 1 },
+      formula: 'Kullanılabilirlik % = (aktif araç-gün − bakım, arıza ve hasar onarımı günleri) / aktif araç-gün × 100',
+      action: 'Serviste bekleyen araçları her gün takip edin; onarımı uzayan servisle teslim tarihini yazılı olarak kesinleştirin.' },
+    { id: 'pool', name: 'Havuz aracı kullanım oranı', unit: '%', dir: 'up', target: 70, dec: 1, band: { type: 'pt', warn: 5 },
+      formula: 'Havuz kullanım % = havuz araçlarının kullanıldığı araç-gün / havuz araçlarının kullanılabilir araç-gün × 100',
+      action: 'Az kullanılan havuz araçlarını talebi yüksek lokasyona aktarın veya sözleşme bitiminde iade edin.' },
+    { id: 'costKm', name: 'Km başına maliyet', unit: 'TL/km', dir: 'down', target: 21.5, dec: 2, band: { type: 'rel', warn: 0.05 },
+      formula: 'TL/km = ayın toplam filo maliyeti (kira, yakıt, bakım-onarım, lastik, hasar, HGS/OGS, ceza, özmal sigorta ve vergiler) / ayın toplam km değeri',
+      action: 'Km aşımı riski taşıyan kiralık araçları düşük km yapan araçlarla değiştirin; kira ve yakıt faturalarını sözleşmeyle karşılaştırın.' },
+    { id: 'req', name: 'Kullanıcı talebi karşılama süresi', unit: 'saat', dir: 'down', target: 5.5, dec: 1, band: { type: 'rel', warn: 0.15 },
+      formula: 'Ortalama süre = Σ (talebin karşılandığı an − talebin açıldığı an) / ay içinde karşılanan talep sayısı',
+      action: 'Yakıt kartı, HGS/OGS ve UTTS taleplerini tedarikçiyle aynı gün çözecek şekilde önceliklendirin; havuz rezervasyonunu çevrim içi hâle getirin.' },
+    { id: 'pm', name: 'Zamanında bakım', unit: '%', dir: 'up', target: 95, dec: 1, band: { type: 'pt', warn: 5 },
+      formula: 'Zamanında bakım % = vade tarihine kadar yapılan periyodik bakım / ay içinde vadesi gelen periyodik bakım × 100',
+      action: 'Bakım randevularını vadeden iki hafta önce planlayın; kullanıcıya hatırlatma gönderin ve gerekirse ikame aracı önceden ayırın.' },
+    { id: 'claims', name: 'Açık hasar dosyası', unit: 'dosya', dir: 'down', target: 3, dec: 0, band: { type: 'abs', warn: 2 },
+      formula: 'Sayı = ay sonu itibarıyla durumu Ekspertiz bekleniyor, Onarımda veya Ödeme bekleniyor olan hasar dosyaları',
+      action: 'Ekspertiz ve onarım süresini servisle haftalık olarak kontrol edin; ödeme bekleyen dosyalar için sigorta şirketine yazılı hatırlatma yapın.' },
+    { id: 'legal', name: 'Süresi geçmiş yasal ve operasyonel kalem', unit: 'kalem', dir: 'down', target: 0, dec: 0, band: { type: 'abs', warn: 0 },
+      formula: 'Sayı = ay sonu itibarıyla vadesi geçmiş ve işlemi yapılmamış muayene, trafik sigortası, kasko, MTV, yol yardım paketi ve kira sözleşmesi bitişi (iade) kalemleri. Kiralık araçta aynı gün yenilenen trafik sigortası, kasko ve yol yardım tek teyit kalemi sayılır.',
+      action: 'Süresi geçen kalemleri hemen kapatın; vadesine 30 gün kalan her kalem için sorumlu kişi ve tarih belirleyin.' }
+  ];
+
+  /* Durum: hedefe ulaşıldıysa good. Ulaşılmadıysa sapma uyarı bandı içindeyse warn, değilse crit.
+     band.type: 'pt' = yüzde puanı, 'rel' = hedefe göre göreli fark, 'abs' = gösterge biriminde mutlak fark. */
+  function kpiStatus(value, target, dir, band) {
+    if (band == null || typeof band === 'number') { band = { type: 'rel', warn: band == null ? 0.05 : band }; }
+    if (value == null || target == null || !isFinite(value) || !isFinite(target)) { return { status: 'na', gap: null, type: band.type }; }
+    var over = dir === 'up' ? target - value : value - target;
+    if (over <= 1e-12) { return { status: 'good', gap: 0, type: band.type }; }
+    var gap = band.type === 'rel' ? (target > 0 ? over / target : Infinity) : over;
+    return { status: gap <= band.warn + 1e-12 ? 'warn' : 'crit', gap: gap, type: band.type };
+  }
+
+  /* 30 gün içinde dolan ve süresi geçen yasal/operasyonel kalemler (kira sözleşmesi bitişi dahil) */
+  function legalCounts(fleet, refIso, filter) {
+    var c = { over: 0, soon: 0, ok: 0, items: [] };
+    fleet.forEach(function (v) {
+      if (filter && !filter(v)) { return; }
+      if (v.start > refIso) { return; }
+      var seen = {};
+      OBLIGATIONS.forEach(function (o) {
+        if (!o.kpi) { return; }
+        var it = openItem(v, o.id, refIso);
+        if (!it) { return; }
+        /* Kiralık araçta trafik sigortası, kasko ve yol yardımı kiralama firması aynı gün yeniler: tek teyit kalemi sayılır */
+        if (v.own === 'Kiralık' && LESSOR_RENEW[o.id]) {
+          if (seen[it.due]) { return; }
+          seen[it.due] = 1; it = { ob: 'yenileme', due: it.due, status: it.status, days: it.days };
+        }
+        c[it.status]++;
+        if (it.status !== 'ok') { c.items.push({ v: v, it: it }); }
+      });
+      if (v.own === 'Kiralık') {
+        var st = dateStatus(v.end, refIso);
+        c[st]++;
+        if (st !== 'ok') { c.items.push({ v: v, it: { ob: 'sozlesme', due: v.end, status: st, days: daysBetween(refIso, v.end) } }); }
+      }
+    });
+    return c;
+  }
+  function openClaims(fleet, claims, refIso, filter) {
+    var byId = {}; fleet.forEach(function (v) { byId[v.id] = v; });
+    var res = { n: 0, by: { 'Ekspertiz bekleniyor': 0, 'Onarımda': 0, 'Ödeme bekleniyor': 0 } };
+    claims.forEach(function (c) {
+      if (filter && !filter(byId[c.v])) { return; }
+      var st = claimStatus(c, refIso);
+      if (st && st !== 'Kapandı') { res.n++; res.by[st]++; }
+    });
+    return res;
+  }
+
+  function computeKpis(fleet, rec, claims, m, filter) {
+    var s = sumMonth(fleet, rec, m, filter), ref = MONTHS[m].end;
+    var lc = legalCounts(fleet, ref, filter), oc = openClaims(fleet, claims, ref, filter);
+    return {
+      avail: { num: s.vehDays - s.down, den: s.vehDays, value: ratio(s.vehDays - s.down, s.vehDays, 100) },
+      pool: { num: s.poolUsed, den: s.poolAvail, value: ratio(s.poolUsed, s.poolAvail, 100) },
+      costKm: { num: s.total, den: s.km, value: ratio(s.total, s.km, 1) },
+      req: { num: s.reqH, den: s.reqN, value: ratio(s.reqH, s.reqN, 1) },
+      pm: { num: s.pmOnTime, den: s.pmDue, value: ratio(s.pmOnTime, s.pmDue, 100) },
+      claims: { num: oc.n, den: 0, value: oc.n, by: oc.by },
+      legal: { num: lc.over, den: 0, value: lc.over, soon: lc.soon, items: lc.items },
+      sums: s
+    };
+  }
+
+  /* ---- Bütçe: dönem başında (Kasım 2025) kurulan bağımsız plan ----
+     Kira: yürürlükteki sözleşme kiraları; yenilenecek araçlar için tür bazında plan kirası (liste kirasının %90'ı).
+     Yakıt: planlanan km × tüketim × plan motorin fiyatı (ayda %1,6 artış). Bakım, lastik, sigorta ve vergi: özmal araç takvimi.
+     Hasar: yıllık %15 kaza sıklığı × ortalama 20.000 TL şirket payı. İade hasarı: dönemde biten her sözleşme için 20.000 TL. */
+  function makeBudget(fleet) {
+    var monthly = [];
+    for (var m = 0; m < 12; m++) {
+      var M = MONTHS[m], row = emptyCost();
+      fleet.forEach(function (v) {
+        var t = TYPE[v.type], own = v.own === 'Özmal', planKm = dailyCal(v) * M.days * SEASON[m];
+        if (!own) {
+          if (v.start <= MONTHS[0].start) { row.kira += v.rent; }
+          else { var pre = v.start > M.start ? Math.min(M.days, daysBetween(M.start, v.start)) : 0; row.kira += (v.rent * PRE_RENT * pre + t.rent * 0.9 * (M.days - pre)) / M.days; }
+        }
+        if (!own && v.start > MONTHS[0].start && v.start >= M.start && v.start <= M.end) { row.iade += 20000; }
+        row.yakit += planKm * t.l100 / 100 * 1.04 * fuelNet(m, BUDGET_FUEL[m]);
+        row.hgs += planKm * t.hgs;
+        if (own) {
+          row.bakim += t.pmCost * M.days / pmDays(v) + 800;
+          row.lastik += t.tireSet / 36 + (!v.allSeason && (M.mon === 11 || M.mon === 3) ? 1500 : 0);
+          row.sigorta += (t.trafik + t.kasko) / 12 + (M.mon === 0 || M.mon === 6 ? t.mtv / 2 : 0) + MUAYENE_FEE / 24;
+        }
+      });
+      row.hasar = fleet.length * 0.15 / 12 * 20000;
+      row.ceza = fleet.length * 1200 / 12;
+      CATS.forEach(function (c) { row[c.id] = Math.round(row[c.id] / 100) * 100; });
+      monthly.push(row);
+    }
+    var annual = {};
+    CATS.forEach(function (c) { annual[c.id] = 0; for (var k = 0; k < 12; k++) { annual[c.id] += monthly[k][c.id]; } });
+    return { annual: annual, monthly: monthly };
+  }
+  /* Dönem başından m. aya kadar kategori bazında bütçe ve gerçekleşen */
+  function budgetRows(fleet, rec, budget, m) {
+    var rows = CATS.map(function (c) { return { id: c.id, name: c.name, annual: budget.annual[c.id], budget: 0, actual: 0 }; });
+    for (var i = 0; i <= m; i++) {
+      var s = sumMonth(fleet, rec, i);
+      rows.forEach(function (r) { r.budget += budget.monthly[i][r.id]; r.actual += s.cost[r.id]; });
+    }
+    var tot = { annual: 0, budget: 0, actual: 0 };
+    rows.forEach(function (r) { r.diff = r.actual - r.budget; r.pct = ratio(r.actual, r.budget, 100); tot.annual += r.annual; tot.budget += r.budget; tot.actual += r.actual; });
+    tot.diff = tot.actual - tot.budget; tot.pct = ratio(tot.actual, tot.budget, 100);
+    return { rows: rows, total: tot };
+  }
+
+  /* ---- Km aşımı ----
+     Tahmini km = bugünkü km + günlük ortalama km × sözleşme bitişine kalan gün
+     Aşım = max(0, tahmini km − sözleşme km limiti); Ek bedel = aşım × km aşım bedeli (TL/km) */
+  function kmExcess(o) {
+    var proj = o.odo + o.daily * Math.max(0, o.daysLeft);
+    var excess = Math.max(0, proj - o.limit);
+    return { proj: proj, excess: excess, charge: round2(excess * o.fee), usePct: o.limit > 0 ? proj / o.limit * 100 : null };
+  }
+  /* m. ay sonundaki km: aracın filoya girdiği günden itibaren (giriş ayında gün oranıyla) */
+  function odometer(v, rec, m) { var o = v.odoStart; for (var i = 0; i <= m; i++) { var r = rec[i][v.id]; o += r.km * r.ownDays / r.days; } return Math.round(o); }
+  function leaseRisk(fleet, rec, m) {
+    var ref = MONTHS[m].end, from = Math.max(0, m - 5), out = [];
+    fleet.forEach(function (v) {
+      if (v.own !== 'Kiralık' || v.start > ref) { return; }
+      var km6 = 0, d6 = 0;
+      for (var i = from; i <= m; i++) { km6 += rec[i][v.id].km; d6 += rec[i][v.id].days; }
+      var odo = odometer(v, rec, m), daily = d6 > 0 ? Math.round(km6 / d6) : 0, left = daysBetween(ref, v.end);
+      var x = kmExcess({ odo: odo, daily: daily, daysLeft: left, limit: v.kmLimit, fee: v.fee });
+      out.push({ v: v, odo: odo, daily: daily, left: left, limit: v.kmLimit, fee: v.fee, proj: x.proj, excess: x.excess, charge: x.charge, usePct: x.usePct });
+    });
+    return out;
+  }
+
+  /* ---- Yaşam döngüsü anlık görünümü (31.10.2026) ---- */
+  function lifecycle(fleet, rec, orders) {
+    var risk = {}; leaseRisk(fleet, rec, 11).forEach(function (r) { risk[r.v.id] = r; });
+    var out = { siparis: orders.map(function (o) { return { o: o, status: orderStatus(o, REF) }; }), giris: [], kullanim: [], iade: [] };
+    fleet.forEach(function (v) {
+      var st = stageOf(v, REF); if (!st) { return; }
+      var row = { v: v, risk: risk[v.id] || null, odo: odometer(v, rec, 11) };
+      if (st === 'giris') { row.cl = checklist(ONB_ITEMS, v.onb); }
+      if (st === 'iade') { row.cl = checklist(RET_ITEMS, v.retDone); }
+      out[st].push(row);
+    });
+    return out;
+  }
+
+  /* ---- Fatura kontrolü: fark = fatura tutarı − sözleşmeye göre beklenen tutar ---- */
+  function invoiceCheck(inv, tolPct) {
+    var diff = round2(inv.billed - inv.agreed), lim = Math.abs(inv.agreed) * tolPct / 100;
+    return { billed: round2(inv.billed), agreed: round2(inv.agreed), diff: diff, status: Math.abs(diff) <= lim + 1e-9 ? 'Uygun' : 'İncele' };
+  }
+  /* Örnek faturalar m. ayın model değerlerinden türetilir: beklenen tutar = modelin o kalemdeki maliyeti.
+     İki satırda bilinçli fark vardır: B firması sözleşmesi biten bir aracın kirasını eklemiş, yakıt kartında iskonto uygulanmamış. */
+  function buildInvoices(fleet, rec, m) {
+    var s = sumMonth(fleet, rec, m), out = [];
+    LESSORS.forEach(function (L) {
+      var vs = fleet.filter(function (v) { return v.lessor === L.id && rec[m][v.id].cost.kira > 0; });
+      if (!vs.length) { return; }
+      var agreed = 0; vs.forEach(function (v) { agreed += rec[m][v.id].cost.kira; });
+      var extra = L.id === 'B' ? Math.round(agreed / vs.length / 500) * 500 : 0;
+      out.push({ id: 'kira' + L.id, cat: 'kira', item: 'Araç kirası', sup: L.name, qty: vs.length + ' araç', billed: agreed + extra, agreed: agreed,
+        note: extra ? 'Sözleşmesi biten bir aracın kirası faturaya eklenmiş.' : '' });
+    });
+    var litres = Math.round(s.fuelL);
+    out.push({ id: 'yakit', cat: 'yakit', item: 'Motorin', sup: 'Yakıt kartı firması', qty: litres + ' L', billed: round2(s.cost.yakit / (1 - FUEL_DISCOUNT)), agreed: s.cost.yakit, pump: FUEL_PRICE[m],
+      note: 'Sözleşmedeki %3 iskonto uygulanmamış.' });
+    out.push({ id: 'hgs', cat: 'hgs', item: 'Köprü ve otoyol geçişleri', sup: 'HGS/OGS hizmet sağlayıcısı', qty: '', billed: s.cost.hgs, agreed: s.cost.hgs, note: '' });
+    if (s.cost.bakim > 0) { out.push({ id: 'bakim', cat: 'bakim', item: 'Özmal araç bakım-onarımı', sup: 'Yetkili servisler', qty: '', billed: s.cost.bakim, agreed: s.cost.bakim, note: '' }); }
+    if (s.cost.lastik > 0) { out.push({ id: 'lastik', cat: 'lastik', item: 'Lastik değişimi ve saklama', sup: 'Lastik tedarikçisi', qty: '', billed: s.cost.lastik, agreed: s.cost.lastik, note: '' }); }
+    return out;
+  }
+
+  /* ---- Servis sağlayıcı performansı (örnek) ---- */
+  var PROVIDERS = [
+    { id: 'svcA', name: 'Yetkili servis A', area: 'İstanbul Anadolu yakası', unit: 'gün', q: 0.95 },
+    { id: 'svcB', name: 'Yetkili servis B', area: 'İstanbul Avrupa yakası', unit: 'gün', q: 0.72 },
+    { id: 'svcC', name: 'Yetkili servis C', area: 'Bursa ve Manisa', unit: 'gün', q: 0.91 },
+    { id: 'svcD', name: 'Yetkili servis D', area: 'Ankara', unit: 'gün', q: 0.9 },
+    { id: 'kap', name: 'Anlaşmalı kaporta-boya servisi', area: 'Tüm lokasyonlar', unit: 'gün', q: 0.82 },
+    { id: 'lastik', name: 'Lastik tedarikçisi', area: 'Tüm lokasyonlar', unit: 'gün', q: 0.93 },
+    { id: 'yol', name: 'Yol yardım firması', area: 'Tüm lokasyonlar', unit: 'dk', q: 0.88, noRepeat: true }
+  ];
+  var SITE_SVC = { atasehir: 'svcA', kagithane: 'svcB', bursa: 'svcC', manisa: 'svcC', ankara: 'svcD' };
+  function providerStatus(onTime, repeat) {
+    if (onTime == null) { return 'na'; }
+    var rp = repeat == null ? 0 : repeat;
+    if (onTime >= 90 && rp <= 5) { return 'good'; }
+    if (onTime >= 80 && rp <= 10) { return 'warn'; }
+    return 'crit';
+  }
+  function serviceStats(fleet, rec, claims, m, win) {
+    var from = Math.max(0, m - win + 1), S = {}, P = {};
+    PROVIDERS.forEach(function (p) { P[p.id] = p; S[p.id] = { jobs: 0, dur: 0, onTime: 0, repeat: 0, csat: 0 }; });
+    function add(pid, key, promised, actual) {
+      var s = S[pid], q = P[pid].q;
+      s.jobs++; s.dur += actual; if (actual <= promised) { s.onTime++; }
+      if (!P[pid].noRepeat && hashFrac(key + '|rep') < (1 - q) * 0.4) { s.repeat++; }
+      s.csat += clamp(2.6 + q * 2.2 + (hashFrac(key + '|cs') - 0.5) * 0.8 - (actual > promised ? 0.5 : 0), 1, 5);
+    }
+    for (var i = from; i <= m; i++) {
+      fleet.forEach(function (v) {
+        var r = rec[i][v.id]; if (!r.days) { return; }
+        var sp = SITE_SVC[v.base], q = P[sp].q, key, j;
+        for (j = 0; j < r.pmDue; j++) { key = v.id + '|pm|' + i + '|' + j; add(sp, key, 1, hashFrac(key) > q ? 2 + Math.floor(hashFrac(key + '|l') * 2) : 1); }
+        if (r.brk) { key = v.id + '|brk|' + i; add(sp, key, 2, hashFrac(key) > q ? 3 + Math.floor(hashFrac(key + '|l') * 3) : 1 + Math.floor(hashFrac(key + '|l') * 2)); }
+        if (r.road) { key = v.id + '|road|' + i; add('yol', key, 60, hashFrac(key) > P.yol.q ? 65 + Math.floor(hashFrac(key + '|l') * 50) : 25 + Math.floor(hashFrac(key + '|l') * 35)); }
+        for (j = 0; j < r.tyre; j++) { key = v.id + '|tyre|' + i + '|' + j; add('lastik', key, 1, hashFrac(key) > P.lastik.q ? 2 : 1); }
+      });
+    }
+    claims.forEach(function (c) { if (c.m >= from && c.m <= m && claimStatus(c, MONTHS[m].end) !== 'Onarımda' && claimStatus(c, MONTHS[m].end) !== 'Ekspertiz bekleniyor') { add('kap', 'cl|' + c.no, c.promised, c.repairDays); } });
+    return PROVIDERS.map(function (p) {
+      var s = S[p.id], onTime = ratio(s.onTime, s.jobs, 100), rep = p.noRepeat ? null : ratio(s.repeat, s.jobs, 100);
+      return { id: p.id, name: p.name, area: p.area, unit: p.unit, jobs: s.jobs, avgDur: ratio(s.dur, s.jobs, 1), onTime: onTime, repeat: rep, csat: ratio(s.csat, s.jobs, 1),
+        status: providerStatus(onTime, rep) };
+    });
+  }
+
+  /* ---- Grafik ölçeği ---- */
+  function niceNum(range, round) {
+    var exp = Math.floor(Math.log10(range));
+    var f = range / Math.pow(10, exp), nf;
+    if (round) { nf = f < 1.5 ? 1 : f < 3 ? 2 : f < 7 ? 5 : 10; }
+    else { nf = f <= 1 ? 1 : f <= 2 ? 2 : f <= 5 ? 5 : 10; }
+    return nf * Math.pow(10, exp);
+  }
+  function niceScale(min, max, ticks) {
+    if (!(max > min)) { var pad = Math.abs(min) > 0 ? Math.abs(min) * 0.1 : 1; min -= pad; max += pad; }
+    var range = niceNum(max - min, false);
+    var step = niceNum(range / (ticks - 1), true);
+    var lo = Math.floor(min / step) * step, hi = Math.ceil(max / step) * step;
+    var n = Math.round((hi - lo) / step), vals = [];
+    for (var i = 0; i <= n; i++) { vals.push(Number((lo + i * step).toPrecision(12))); }
+    return { lo: vals[0], hi: vals[vals.length - 1], step: step, ticks: vals };
+  }
+
+  /* ---- Türkçe sayı girişi ----
+     Virgül ondalık ayırıcıdır ("12,5" = 12,5). Nokta binlik ayırıcıdır ("1.800" = 1800, "1.800,5" = 1800,5).
+     Binlik kalıbına uymayan tek noktalı değer ("2.5") ondalık kabul edilir. */
+  function parseNum(str, kind) {
+    var s = String(str == null ? '' : str).trim().replace(/\s+/g, '');
+    if (s === '') { return NaN; }
+    var neg = s.charAt(0) === '-' || s.charAt(0) === '−';
+    if (neg) { s = s.slice(1); }
+    if (s.indexOf(',') >= 0) {
+      if (!/^\d{1,3}(\.\d{3})*,\d+$/.test(s) && !/^\d+,\d+$/.test(s)) { return NaN; }
+      s = s.replace(/\./g, '').replace(',', '.');
+    } else if (/^[1-9]\d{0,2}(\.\d{3})+$/.test(s)) {
+      s = s.replace(/\./g, '');
+    } else if (kind === 'int' && s.indexOf('.') >= 0) {
+      return NaN;
+    }
+    if (!/^\d+(\.\d+)?$/.test(s)) { return NaN; }
+    var v = neg ? -Number(s) : Number(s);
+    if (kind === 'int' && v % 1 !== 0) { return NaN; }
+    return v;
+  }
+
+  return {
+    mulberry32: mulberry32, hashStr: hashStr, hashFrac: hashFrac, MONTHS: MONTHS, REF: REF, FUEL_PRICE: FUEL_PRICE, FUEL_DISCOUNT: FUEL_DISCOUNT,
+    TYPES: TYPES, TYPE: TYPE, BASES: BASES, BASE: BASE, LESSORS: LESSORS, LESSOR: LESSOR, CATS: CATS, ONB_ITEMS: ONB_ITEMS, RET_ITEMS: RET_ITEMS, RET_TH: RET_TH,
+    ONB_DAYS: ONB_DAYS, BUDGET_FUEL: BUDGET_FUEL, FUEL_NOV26: FUEL_NOV26, VAT: VAT, fuelNet: fuelNet, checklistOrdered: checklistOrdered, RET_DAYS: RET_DAYS, OBLIGATIONS: OBLIGATIONS, KPIS: KPIS, REQ_TYPES: REQ_TYPES, PROVIDERS: PROVIDERS, SITE_SVC: SITE_SVC, DEDUCTIBLE: DEDUCTIBLE,
+    dayNum: dayNum, isoOf: isoOf, addDays: addDays, addMonths: addMonths, daysBetween: daysBetween, dateStatus: dateStatus,
+    generateFleet: generateFleet, dailyCal: dailyCal, checklist: checklist, stageOf: stageOf, generateOrders: generateOrders, orderStatus: orderStatus,
+    applies: applies, pmDays: pmDays, occDue: occDue, occDelay: occDelay, openItem: openItem, occInMonth: occInMonth, activeDays: activeDays, overlapDays: overlapDays,
+    generateClaims: generateClaims, makeClaim: makeClaim, claimStatus: claimStatus, simulate: simulate, costTotal: costTotal, sumMonth: sumMonth, ratio: ratio,
+    kpiStatus: kpiStatus, legalCounts: legalCounts, openClaims: openClaims, computeKpis: computeKpis, makeBudget: makeBudget, budgetRows: budgetRows,
+    kmExcess: kmExcess, odometer: odometer, leaseRisk: leaseRisk, lifecycle: lifecycle, invoiceCheck: invoiceCheck, buildInvoices: buildInvoices,
+    serviceStats: serviceStats, providerStatus: providerStatus, niceScale: niceScale, parseNum: parseNum
+  };
+})();
+if (typeof module !== 'undefined' && module.exports) { module.exports = Calc; }
+</script>
+
+<!-- ================= Arayüz ================= -->
+<script id="app">
+(function () {
+  'use strict';
+  var C = Calc;
+  var FLEET = C.generateFleet();
+  var CLAIMS = C.generateClaims(FLEET);
+  var REC = C.simulate(FLEET, CLAIMS);
+  var BUDGET = C.makeBudget(FLEET, REC);
+  var ORDERS = C.generateOrders(FLEET);
+  var VBY = {}; FLEET.forEach(function (v) { VBY[v.id] = v; });
+  var LAST = C.MONTHS.length - 1;
+  var KPI = {}; C.KPIS.forEach(function (k) { KPI[k.id] = k; });
+  var KPI_SHORT = { avail: 'Araç kullanılabilirliği', pool: 'Havuz aracı kullanımı', costKm: 'Km başına maliyet', req: 'Talep karşılama süresi', pm: 'Zamanında bakım', claims: 'Açık hasar dosyası', legal: 'Süresi geçmiş kalem' };
+  var KPI_MAIN = ['avail', 'pool', 'costKm', 'req'];
+  var KPI_MINOR = ['pm', 'claims', 'legal'];
+  var COUNT_UNIT = { dosya: 1, kalem: 1 };
+  var STATUS_TXT = { good: 'İyi', warn: 'Dikkat', crit: 'Kritik', na: 'Veri yok' };
+  var DATE_TXT = { over: 'Süresi geçti', soon: '30 gün içinde', ok: 'Uygun' };
+  var TEL = { lowZimmet: 45, lowPool: 40, months: 6, idleHigh: 18, idleTarget: 10, offHigh: 10, offTarget: 5, violHigh: 6, violTarget: 3 };
+  var SVC_WIN = 12;
+  var RISK_DAYS = 365; /* km aşımı listesi: önlem alınabilecek, 12 ay içinde biten sözleşmeler */
+  var BUDGET_TARGET = 100, BUDGET_BAND = { type: 'pt', warn: 3 };
+
+  /* ---------- Biçimlendirme ---------- */
+  var NF = {};
+  function nf(d) { if (!NF[d]) { NF[d] = new Intl.NumberFormat('tr-TR', { minimumFractionDigits: d, maximumFractionDigits: d }); } return NF[d]; }
+  function n0(v) { return nf(0).format(v); }
+  function nd(v, d) { return nf(d).format(v); }
+  function pct(v, d) { if (v == null || !isFinite(v)) { return '—'; } d = d == null ? 1 : d; return (v < 0 ? '−' : '') + '%' + nf(d).format(Math.abs(v)); }
+  function tl(v) { return (v < 0 ? '−' : '') + nf(0).format(Math.abs(Math.round(v))) + ' TL'; }
+  function mn(v, d) { return nf(d == null ? 1 : d).format(v / 1e6); }
+  function signed(v, d) { var s = nf(d || 0).format(Math.abs(v)); return v > 0 ? '+' + s : v < 0 ? '−' + s : s; }
+  function fmtDate(iso) { var p = iso.split('-'); return p[2] + '.' + p[1] + '.' + p[0]; }
+  function esc(s) { return String(s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+  function $(id) { return document.getElementById(id); }
+  function inputVal(v) { var d = v % 1 === 0 ? 0 : (Math.abs(v * 10 - Math.round(v * 10)) < 1e-9 ? 1 : 2); return nf(d).format(v); }
+  function baseShort(id) { return C.BASE[id].short; }
+  function sum(a) { var s = 0; a.forEach(function (x) { s += x; }); return s; }
+  function fmtKpi(k, v) {
+    if (v == null || !isFinite(v)) { return '—'; }
+    if (k.unit === '%') { return pct(v, k.dec); }
+    if (COUNT_UNIT[k.unit]) { return n0(v) + ' ' + k.unit; }
+    return nd(v, k.dec) + ' ' + k.unit;
+  }
+  function valHtml(k, v) {
+    if (v == null || !isFinite(v)) { return '—'; }
+    if (k.unit === '%') { return esc(pct(v, k.dec)); }
+    if (COUNT_UNIT[k.unit]) { return esc(n0(v)) + '<span class="u">' + esc(k.unit) + '</span>'; }
+    return esc(nd(v, k.dec)) + '<span class="u">' + esc(k.unit) + '</span>';
+  }
+  function chipHtml(cls, txt) { return '<span class="chip ' + cls + '">' + esc(txt) + '</span>'; }
+  function relDays(d) { return d < 0 ? n0(-d) + ' gün geçti' : (d === 0 ? 'bugün' : n0(d) + ' gün kaldı'); }
+  function usageTxt(v) { var t = C.TYPE[v.type]; return t.assign === 'havuz' ? 'Havuz aracı' : t.dept + ' · ' + v.sicil; }
+
+  /* ---------- Durum ve kalıcılık ---------- */
+  var STORE_KEY = 'filo-operasyon-paneli-v1';
+  function defaultTargets() { var t = {}; C.KPIS.forEach(function (k) { t[k.id] = k.target; }); return t; }
+  var State = { month: LAST, trendKpi: 'avail', targets: defaultTargets(), theme: null,
+    lcStage: 'giris', lcBase: 'all', lcType: 'all', lcMore: false,
+    calType: 'all', calBase: 'all', calSt: 'attn', calMore: false, claimMore: false, riskMore: false, actMore: false, budgetCum: false };
+  function isNum(v) { return typeof v === 'number' && isFinite(v); }
+  function loadState() {
+    var raw = null;
+    try { raw = window.localStorage.getItem(STORE_KEY); } catch (e) { raw = null; }
+    if (!raw) { return; }
+    var s; try { s = JSON.parse(raw); } catch (e) { return; }
+    if (!s || typeof s !== 'object') { return; }
+    if (s.targets && typeof s.targets === 'object') { C.KPIS.forEach(function (k) { var v = s.targets[k.id]; if (isNum(v) && v >= 0 && (k.unit !== '%' || v <= 100)) { State.targets[k.id] = v; } }); }
+    if (s.theme === 'light' || s.theme === 'dark') { State.theme = s.theme; }
+  }
+  function saveState() {
+    try { window.localStorage.setItem(STORE_KEY, JSON.stringify({ targets: State.targets, theme: State.theme })); }
+    catch (e) { /* Depolama kapalı olabilir; panel yine çalışır. */ }
+  }
+
+  /* ---------- Tema ---------- */
+  var mq = window.matchMedia ? window.matchMedia('(prefers-color-scheme: dark)') : null;
+  function effectiveDark() { return State.theme ? State.theme === 'dark' : !!(mq && mq.matches); }
+  function applyTheme() {
+    if (State.theme) { document.documentElement.setAttribute('data-theme', State.theme); }
+    else { document.documentElement.removeAttribute('data-theme'); }
+    var dark = effectiveDark(), b = $('themeBtn');
+    b.textContent = dark ? 'Açık tema' : 'Koyu tema';
+    b.setAttribute('aria-pressed', dark ? 'true' : 'false');
+    b.setAttribute('aria-label', dark ? 'Açık temaya geç' : 'Koyu temaya geç');
+  }
+
+  /* ---------- SVG çizgi grafik ---------- */
+  function lineChart(el, cfg) {
+    var W = Math.floor(el.clientWidth || 0);
+    if (W < 10) { return; }
+    W = Math.max(260, W);
+    var H = cfg.height || (W < 520 ? 210 : 240);
+    var pl = W < 520 ? 52 : 64, pr = 16, pt = 14, pb = 30;
+    var vals = [];
+    cfg.series.forEach(function (s) { s.values.forEach(function (v) { if (v != null && isFinite(v)) { vals.push(v); } }); });
+    if (cfg.target != null && isFinite(cfg.target)) { vals.push(cfg.target); }
+    if (!vals.length) { el.innerHTML = '<p class="muted">Grafik için veri yok.</p>'; return; }
+    var mnv = Math.min.apply(null, vals), mxv = Math.max.apply(null, vals);
+    if (cfg.yZero) { mnv = Math.min(0, mnv); }
+    var sc = C.niceScale(mnv, mxv, 5);
+    var n = cfg.labels.length, iw = W - pl - pr, ih = H - pt - pb;
+    function x(i) { return pl + (n === 1 ? iw / 2 : i * iw / (n - 1)); }
+    function y(v) { return pt + ih - (v - sc.lo) / (sc.hi - sc.lo) * ih; }
+    var s = '<svg class="chart" width="' + W + '" height="' + H + '" viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="' + esc(cfg.aria) + '">';
+    if (cfg.selIdx != null) {
+      var bw = n > 1 ? iw / (n - 1) : iw;
+      var x0 = Math.max(pl, x(cfg.selIdx) - bw / 2), x1 = Math.min(pl + iw, x(cfg.selIdx) + bw / 2);
+      s += '<rect class="ch-sel" x="' + x0.toFixed(1) + '" y="' + pt + '" width="' + (x1 - x0).toFixed(1) + '" height="' + ih + '"/>';
+    }
+    sc.ticks.forEach(function (t) {
+      var yy = y(t).toFixed(1);
+      s += '<line class="ch-grid" x1="' + pl + '" x2="' + (pl + iw) + '" y1="' + yy + '" y2="' + yy + '"/>';
+      s += '<text class="ch-txt" x="' + (pl - 6) + '" y="' + yy + '" text-anchor="end" dominant-baseline="middle">' + esc(cfg.tick(t)) + '</text>';
+    });
+    s += '<line class="ch-axis" x1="' + pl + '" x2="' + (pl + iw) + '" y1="' + (pt + ih) + '" y2="' + (pt + ih) + '"/>';
+    var step = W < 420 ? 3 : (W < 820 ? 2 : 1);
+    cfg.labels.forEach(function (lb, i) {
+      if ((n - 1 - i) % step !== 0) { return; }
+      var anc = i === n - 1 && n > 1 ? 'end' : (i === 0 && n > 1 ? 'start' : 'middle');
+      var lx = anc === 'end' ? x(i) + 4 : anc === 'start' ? x(i) - 4 : x(i);
+      s += '<text class="ch-txt" x="' + lx.toFixed(1) + '" y="' + (H - 9) + '" text-anchor="' + anc + '">' + esc(lb) + '</text>';
+    });
+    if (cfg.target != null && isFinite(cfg.target)) {
+      var ty = y(cfg.target).toFixed(1);
+      s += '<line class="ch-target" x1="' + pl + '" x2="' + (pl + iw) + '" y1="' + ty + '" y2="' + ty + '"/>';
+      var near0 = cfg.series[0].values.slice(0, 3).some(function (v) { return v != null && isFinite(v) && Math.abs(y(v) - (Number(ty) - 9)) < 12; });
+      s += '<text class="ch-target-txt" x="' + (pl + 6) + '" y="' + (near0 ? Number(ty) + 14 : Number(ty) - 5) + '" text-anchor="start">Hedef ' + esc(cfg.tick(cfg.target, true)) + '</text>';
+    }
+    cfg.series.forEach(function (se) {
+      var line = se.cls || 'ch-s1', dot = se.dot || 'ch-p1', d = '', started = false;
+      se.values.forEach(function (v, i) {
+        if (v == null || !isFinite(v)) { started = false; return; }
+        d += (started ? 'L' : 'M') + x(i).toFixed(1) + ' ' + y(v).toFixed(1) + ' ';
+        started = true;
+      });
+      s += '<path class="' + line + '" d="' + d.trim() + '"/>';
+      se.values.forEach(function (v, i) {
+        if (v == null || !isFinite(v)) { return; }
+        s += '<circle class="' + dot + '" cx="' + x(i).toFixed(1) + '" cy="' + y(v).toFixed(1) + '" r="' + (i === cfg.selIdx ? 4.5 : (se.small ? 2.2 : 3)) + '"><title>' + esc(cfg.labels[i] + ' · ' + se.name + ': ' + cfg.fmt(v)) + '</title></circle>';
+      });
+    });
+    s += '</svg>';
+    el.innerHTML = s;
+  }
+
+  /* ---------- Açılır bilgi kutuları ve aç/kapa düğmeleri ---------- */
+  var gPopId = null;
+  function gBtn(id) { return document.querySelector('[data-gpop][aria-controls="' + id + '"]'); }
+  function placePop(pop) {
+    pop.style.left = ''; pop.style.right = '';
+    var r = pop.getBoundingClientRect(), vw = document.documentElement.clientWidth;
+    if (r.left < 12) { pop.style.right = 'auto'; pop.style.left = (pop.offsetLeft + (12 - r.left)) + 'px'; }
+    r = pop.getBoundingClientRect();
+    if (r.right > vw - 12) { pop.style.right = 'auto'; pop.style.left = (pop.offsetLeft - (r.right - (vw - 12))) + 'px'; }
+  }
+  function closeG(focusBtn) {
+    if (!gPopId) { return; }
+    var id = gPopId; gPopId = null;
+    var p = $(id), b = gBtn(id);
+    if (p) { p.hidden = true; }
+    if (b) { b.setAttribute('aria-expanded', 'false'); if (focusBtn) { b.focus(); } }
+  }
+  function openG(id) {
+    if (gPopId === id) { closeG(true); return; }
+    closeG(false); closeTargets(false);
+    var p = $(id); if (!p) { return; }
+    gPopId = id; p.hidden = false;
+    var b = gBtn(id); if (b) { b.setAttribute('aria-expanded', 'true'); }
+    placePop(p);
+  }
+  function syncG() {
+    if (!gPopId) { return; }
+    var p = $(gPopId), b = gBtn(gPopId);
+    if (!p || !b || !b.offsetParent) { gPopId = null; return; }
+    p.hidden = false; b.setAttribute('aria-expanded', 'true'); placePop(p);
+  }
+  function infoPop(id, title, body) {
+    return '<button type="button" class="info-btn" data-gpop aria-controls="' + id + '" aria-expanded="false" aria-label="' + esc(title) + ': formül ve açıklama" title="Formül ve açıklama">i</button>' +
+      '<div class="kpi-pop" id="' + id + '" role="dialog" aria-label="' + esc(title) + '" hidden><div class="pop-h"><b>' + esc(title) + '</b><button type="button" class="x-btn" data-gpop-close aria-label="Kapat">×</button></div>' + body + '</div>';
+  }
+  function popF(label, txt) { return '<p class="pop-l">' + esc(label) + '</p><p class="formula">' + esc(txt) + '</p>'; }
+  function popM(txt) { return '<p class="pop-meta">' + esc(txt) + '</p>'; }
+  /* Özet kartı: gösterge kartıyla aynı yapı */
+  function sumCard(o) {
+    return '<article class="kpi" id="' + o.id + '"><div class="kpi-top"><h3>' + esc(o.title) + '</h3>' +
+      (o.pop ? '<span class="pop-anchor">' + infoPop(o.id + '-pop', o.popTitle || o.title, o.pop) + '</span>' : '') + '</div>' +
+      '<div class="kpi-val">' + o.val + '</div><div class="kpi-foot"><span class="sub">' + (o.sub || '') + '</span>' + (o.chip || '') + '</div></article>';
+  }
+  var ON_TOGGLE = {};
+  function setTgl(id, on) {
+    var el = $(id); if (el) { el.hidden = !on; }
+    Array.prototype.forEach.call(document.querySelectorAll('[data-tgl][aria-controls="' + id + '"]'), function (b) {
+      b.setAttribute('aria-expanded', on ? 'true' : 'false');
+      var t = b.getAttribute(on ? 'data-on' : 'data-off'); if (t) { b.textContent = t; }
+    });
+    if (ON_TOGGLE[id]) { ON_TOGGLE[id](on); }
+  }
+  function moreBtn(id, total, limit, on, label) {
+    var b = $(id);
+    b.hidden = total <= limit;
+    b.textContent = on ? 'İlk ' + limit + ' ' + label + ' göster' : 'Tümünü göster (' + total + ')';
+    b.setAttribute('aria-expanded', on ? 'true' : 'false');
+  }
+
+  /* ---------- Hedefler paneli ---------- */
+  function closeTargets(focusBtn) {
+    var p = $('targetsPanel');
+    if (p.hidden) { return; }
+    p.hidden = true;
+    $('targetsBtn').setAttribute('aria-expanded', 'false');
+    if (focusBtn) { $('targetsBtn').focus(); }
+  }
+  function openTargets(focusId) {
+    closeG(false);
+    $('targetsPanel').hidden = false;
+    $('targetsBtn').setAttribute('aria-expanded', 'true');
+    var f = $('tgt-' + (focusId || C.KPIS[0].id));
+    if (f) { f.focus(); if (f.select) { f.select(); } }
+  }
+  function targetHint(k) { return (k.dir === 'up' ? 'en az, ' : 'en çok, ') + k.unit; }
+  function buildTargets() {
+    $('targetsGrid').innerHTML = C.KPIS.map(function (k) {
+      return '<div class="tg-row"><label for="tgt-' + k.id + '">' + esc(k.name) + '<span>' + esc(targetHint(k)) + '</span></label>' +
+        '<input type="text" inputmode="decimal" class="num-in" id="tgt-' + k.id + '" value="' + esc(inputVal(State.targets[k.id])) + '">' +
+        '<span class="err" id="tgt-' + k.id + '-err"></span></div>';
+    }).join('');
+    C.KPIS.forEach(function (k) {
+      $('tgt-' + k.id).addEventListener('input', function (e) {
+        var v = C.parseNum(e.target.value, COUNT_UNIT[k.unit] ? 'int' : 'dec'), err = '';
+        if (isNaN(v)) { err = COUNT_UNIT[k.unit] ? 'Tam sayı girin.' : 'Geçerli bir sayı girin (ondalık için virgül kullanın).'; }
+        else if (v < 0) { err = 'Hedef negatif olamaz.'; }
+        else if (k.unit === '%' && v > 100) { err = 'Yüzde hedefi 100\'ü aşamaz.'; }
+        $('tgt-' + k.id + '-err').textContent = err;
+        e.target.setAttribute('aria-invalid', err ? 'true' : 'false');
+        if (!err) { State.targets[k.id] = v; saveState(); renderOzet(); }
+      });
+    });
+  }
+
+  /* ---------- Sekmeler ---------- */
+  var TABS = ['ozet', 'yasam', 'bakim', 'maliyet', 'telematik'];
+  var TAB_TITLES = { ozet: 'Filo Özeti', yasam: 'Araç Yaşam Döngüsü', bakim: 'Bakım, Hasar ve Servis', maliyet: 'Maliyet ve Raporlama', telematik: 'Telematik ve Kullanım' };
+  var activeTab = 'ozet';
+  function route() {
+    var h = (window.location.hash || '').replace('#', '');
+    if (TABS.indexOf(h) < 0) { h = 'ozet'; }
+    showTab(h);
+  }
+  function showTab(id) {
+    activeTab = id;
+    document.body.setAttribute('data-tab', id);
+    closeG(false); closeTargets(false);
+    TABS.forEach(function (t) {
+      var on = t === id;
+      $('panel-' + t).hidden = !on;
+      $('tab-' + t).setAttribute('aria-selected', on ? 'true' : 'false');
+      $('tab-' + t).setAttribute('tabindex', on ? '0' : '-1');
+    });
+    document.title = 'Filo Operasyon Paneli · ' + TAB_TITLES[id];
+    renderActive();
+  }
+  function renderActive() {
+    var m = State.month, M = C.MONTHS[m];
+    var titles = {
+      ozet: '',
+      yasam: '<b>Araç Yaşam Döngüsü</b><span>' + esc(fmtDate(C.REF)) + ' itibarıyla anlık durum</span>',
+      bakim: '<b>Bakım, Hasar ve Servis</b><span>' + esc(fmtDate(M.end)) + ' itibarıyla</span>',
+      maliyet: '<b>Maliyet ve Raporlama</b><span>' + esc(C.MONTHS[0].label + ' – ' + M.label) + ' kümülatif</span>',
+      telematik: '<b>Telematik ve Kullanım</b><span>' + esc(M.label) + '</span>'
+    };
+    $('ctxTitle').innerHTML = titles[activeTab];
+    $('ctxTitle').hidden = !titles[activeTab];
+    if (activeTab === 'ozet') { renderOzet(); }
+    else if (activeTab === 'yasam') { renderYasam(); }
+    else if (activeTab === 'bakim') { renderBakim(); }
+    else if (activeTab === 'maliyet') { renderMaliyet(); }
+    else if (activeTab === 'telematik') { renderTelematik(); }
+  }
+
+  /* ================= 1. FİLO ÖZETİ ================= */
+  var kpiCache = {};
+  function kpisOf(m, baseId) {
+    var key = m + '|' + (baseId || 'all');
+    if (!kpiCache[key]) { kpiCache[key] = C.computeKpis(FLEET, REC, CLAIMS, m, baseId ? function (v) { return v.base === baseId; } : null); }
+    return kpiCache[key];
+  }
+  function stOf(kid, r) {
+    var k = KPI[kid];
+    return C.kpiStatus(r.value, State.targets[kid], k.dir, k.band);
+  }
+  function gapText(k, st) {
+    if (st.status === 'good') { return 'hedef karşılandı'; }
+    if (st.gap == null) { return ''; }
+    if (st.type === 'pt') { return 'hedefin ' + nd(st.gap, 1) + ' puan ' + (k.dir === 'up' ? 'altında' : 'üstünde'); }
+    if (st.type === 'abs') { return 'hedefin ' + n0(st.gap) + ' ' + k.unit + ' üstünde'; }
+    return 'hedefin ' + pct(st.gap * 100, 1) + ' ' + (k.dir === 'down' ? 'üstünde' : 'altında');
+  }
+  function kpiCalcText(k, r, m) {
+    if (r.value == null) { return 'Bu ay için hesaplanacak kayıt yok.'; }
+    switch (k.id) {
+      case 'avail': return '(' + n0(r.den) + ' araç-gün − ' + n0(r.den - r.num) + ' bakım, arıza ve onarım günü) / ' + n0(r.den) + ' araç-gün × 100 = ' + fmtKpi(k, r.value);
+      case 'pool': return n0(r.num) + ' kullanılan havuz araç-günü / ' + n0(r.den) + ' kullanılabilir havuz araç-günü × 100 = ' + fmtKpi(k, r.value);
+      case 'costKm': return n0(r.num) + ' TL / ' + n0(r.den) + ' km = ' + fmtKpi(k, r.value);
+      case 'req': return nd(r.num, 1) + ' saat / ' + n0(r.den) + ' talep = ' + fmtKpi(k, r.value);
+      case 'pm': return n0(r.num) + ' zamanında / ' + n0(r.den) + ' vadesi gelen bakım × 100 = ' + fmtKpi(k, r.value);
+      case 'claims': return fmtDate(C.MONTHS[m].end) + ' itibarıyla ' + n0(r.value) + ' açık dosya: ekspertiz bekleyen ' + n0(r.by['Ekspertiz bekleniyor']) + ', onarımda ' + n0(r.by['Onarımda']) + ', ödeme bekleyen ' + n0(r.by['Ödeme bekleniyor']);
+      case 'legal': return fmtDate(C.MONTHS[m].end) + ' itibarıyla süresi geçmiş ' + n0(r.value) + ' kalem var' + (r.value ? ' (' + legalWhere(r.items) + ')' : '') + '. Ayrıca 30 gün içinde süresi dolacak ' + n0(r.soon) + ' kalem için planlama yapılmalı.';
+    }
+    return '';
+  }
+  var OB_NAME = { muayene: 'muayene', yenileme: 'sigorta yenileme teyidi', trafik: 'trafik sigortası', kasko: 'kasko', yol: 'yol yardım', mtv: 'MTV', sozlesme: 'iade' };
+  function legalWhere(items) {
+    return items.filter(function (x) { return x.it.status === 'over'; }).map(function (x) { return x.v.plate + ' ' + OB_NAME[x.it.ob]; }).join(', ');
+  }
+  function kpiCardHtml(k, mini) {
+    var pid = 'kpi-' + k.id + '-pop';
+    return '<article class="kpi' + (mini ? ' mini' : '') + '" id="kpi-' + k.id + '">' +
+      '<div class="kpi-top"><h3>' + esc(KPI_SHORT[k.id]) + '</h3><span class="pop-anchor">' +
+        '<button type="button" class="info-btn" data-gpop aria-controls="' + pid + '" aria-expanded="false" aria-label="' + esc(k.name) + ': formül ve hesap" title="Formül ve hesap">i</button>' +
+        '<div class="kpi-pop" id="' + pid + '" role="dialog" aria-label="' + esc(k.name) + ': formül ve hesap" hidden>' +
+          '<div class="pop-h"><b>' + esc(k.name) + '</b><button type="button" class="x-btn" data-gpop-close aria-label="Kapat">×</button></div>' +
+          '<p class="pop-l">Formül</p><p class="formula">' + esc(k.formula) + '</p>' +
+          '<p class="pop-l">Seçili ayın hesabı</p><p class="formula" id="kpi-' + k.id + '-calc"></p>' +
+          '<p class="pop-meta" id="kpi-' + k.id + '-meta"></p>' +
+          '<button type="button" class="linkbtn" data-goto-target="' + k.id + '">Hedefi değiştir</button>' +
+        '</div></span></div>' +
+      '<div class="kpi-val" id="kpi-' + k.id + '-val">—</div>' +
+      '<div class="kpi-foot"><span id="kpi-' + k.id + '-prev"></span><span class="chip na" id="kpi-' + k.id + '-chip">—</span></div>' +
+      '</article>';
+  }
+  function buildKpiTiles() {
+    $('kpiGrid').innerHTML = KPI_MAIN.map(function (id) { return kpiCardHtml(KPI[id], false); }).join('');
+    $('kpiMini').innerHTML = KPI_MINOR.map(function (id) { return kpiCardHtml(KPI[id], true); }).join('');
+  }
+  function deltaHtml(k, r, p) {
+    if (!p || p.value == null || r.value == null) { return '<span class="vs">önceki ay verisi yok</span>'; }
+    var d = r.value - p.value, better = k.dir === 'up' ? d > 0 : d < 0;
+    var arrow = d > 0 ? '▲' : d < 0 ? '▼' : '■';
+    var rel = p.value !== 0 ? d / p.value * 100 : 0;
+    var cnt = !!COUNT_UNIT[k.unit];
+    var flat = k.unit === '%' ? Math.abs(d) < 0.05 : cnt ? d === 0 : Math.abs(rel) < 0.05;
+    if (flat) { d = 0; arrow = '■'; }
+    var txt = k.unit === '%' ? signed(d, 1) + ' puan' : cnt ? signed(d, 0) + ' ' + k.unit : (flat ? '%0,0' : (d >= 0 ? '+' : '−') + '%' + nd(Math.abs(rel), 1));
+    return '<span class="vs">Geçen aya göre </span><span class="delta ' + (flat ? 'flat' : better ? 'better' : 'worse') + '">' + arrow + ' ' + esc(txt) + '</span><span class="vs"> · hedef ' + esc(fmtKpi(k, State.targets[k.id])) + '</span>';
+  }
+  function renderOzet() {
+    var m = State.month, cur = kpisOf(m), prev = m > 0 ? kpisOf(m - 1) : null;
+    C.KPIS.forEach(function (k) {
+      var r = cur[k.id], st = stOf(k.id, r), p = prev ? prev[k.id] : null;
+      var chip = $('kpi-' + k.id + '-chip');
+      chip.className = 'chip ' + st.status; chip.textContent = STATUS_TXT[st.status]; chip.title = STATUS_TXT[st.status];
+      $('kpi-' + k.id + '-val').innerHTML = valHtml(k, r.value);
+      $('kpi-' + k.id + '-prev').innerHTML = deltaHtml(k, r, p);
+      $('kpi-' + k.id + '-calc').textContent = kpiCalcText(k, r, m);
+      var meta = 'Hedef ' + (k.dir === 'up' ? 'en az ' : 'en çok ') + fmtKpi(k, State.targets[k.id]) + '; ' + gapText(k, st) + '.';
+      if (p && p.value != null) { meta += ' Önceki ay (' + C.MONTHS[m - 1].label + '): ' + fmtKpi(k, p.value) + '.'; }
+      $('kpi-' + k.id + '-meta').textContent = meta;
+    });
+    syncG();
+    renderImprove();
+    renderTrend();
+  }
+  /* İyileştirme alanları: lokasyon × gösterge ve filo geneli kalemleri; sıralama ölçütü = sapma / uyarı bandı */
+  function renderImprove() {
+    var m = State.month, items = [];
+    C.BASES.forEach(function (b) {
+      var res = kpisOf(m, b.id);
+      ['avail', 'pool', 'pm', 'req'].forEach(function (kid) {
+        var k = KPI[kid], r = res[kid];
+        if (kid === 'pm' && r.den < 3) { return; }
+        if (kid === 'pool' && r.den < 30) { return; }
+        if (kid === 'req' && r.den < 10) { return; }
+        var st = stOf(kid, r);
+        if (st.status !== 'warn' && st.status !== 'crit') { return; }
+        items.push({ who: b.name, k: k, st: st, v: r.value, sev: st.gap / k.band.warn, gap: gapText(k, st) });
+      });
+    });
+    var all = kpisOf(m);
+    var stL = stOf('legal', all.legal);
+    if (stL.status === 'warn' || stL.status === 'crit') {
+      items.push({ who: 'Filo geneli', k: KPI.legal, st: stL, v: all.legal.value, sev: 100, gap: legalWhere(all.legal.items), legalOver: true });
+    }
+    ['costKm', 'claims'].forEach(function (kid) {
+      var k = KPI[kid], st = stOf(kid, all[kid]);
+      if (st.status === 'warn' || st.status === 'crit') { items.push({ who: 'Filo geneli', k: k, st: st, v: all[kid].value, sev: st.gap / k.band.warn, gap: gapText(k, st) }); }
+    });
+    items.sort(function (a, b) { return (a.st.status === b.st.status ? 0 : a.st.status === 'crit' ? -1 : 1) || b.sev - a.sev; });
+    /* Her göstergeden yalnızca en büyük sapma alınır; böylece üç farklı konu listelenir */
+    var seen = {};
+    items = items.filter(function (it) { if (seen[it.k.id]) { return false; } seen[it.k.id] = 1; return true; });
+    $('improvePeriod').textContent = C.MONTHS[m].label;
+    if (!items.length) { $('improveList').innerHTML = '<p class="prio-empty">Seçili ayda bütün göstergeler hedefte.</p>'; return; }
+    $('improveList').innerHTML = '<ol class="prio" aria-label="En büyük üç sapma">' + items.slice(0, 3).map(function (it) {
+      var label = it.legalOver ? 'Süresi geçmiş yasal ve operasyonel kalem (' + n0(it.v) + ')' : KPI_SHORT[it.k.id];
+      var val = it.legalOver ? '' : ' (' + fmtKpi(it.k, it.v) + ')';
+      return '<li><span class="pi-txt"><b>' + esc(it.who) + '</b><span class="pi-k"> · ' + esc(label + val) + '</span><br><span class="pi-g">' + esc(it.gap) + '</span></span>' +
+        '<span class="chip ' + it.st.status + '">' + STATUS_TXT[it.st.status] + '</span>' +
+        '<span class="pi-a"><strong>Aksiyon:</strong> ' + esc(it.k.action) + '</span></li>';
+    }).join('') + '</ol>';
+  }
+  function renderTrend() {
+    var k = KPI[State.trendKpi];
+    var vals = C.MONTHS.map(function (mo, i) { return kpisOf(i)[k.id].value; });
+    lineChart($('trendChart'), {
+      labels: C.MONTHS.map(function (mo) { return mo.short; }), series: [{ name: k.name, values: vals }], target: State.targets[k.id], selIdx: State.month,
+      aria: k.name + ' aylık eğilim grafiği', fmt: function (v) { return fmtKpi(k, v); },
+      tick: function (v) { return k.unit === '%' ? '%' + nd(v, v % 1 === 0 ? 0 : 1) : nd(v, v % 1 === 0 ? 0 : 1); }
+    });
+    $('trendTable').innerHTML = '<thead><tr><th>Ay</th><th class="n">' + esc(k.name) + '</th><th class="n">Hedef</th><th>Durum</th></tr></thead><tbody>' +
+      vals.map(function (v, i) { var st = stOf(k.id, kpisOf(i)[k.id]); return '<tr><td>' + esc(C.MONTHS[i].label) + '</td><td class="n">' + esc(fmtKpi(k, v)) + '</td><td class="n">' + esc(fmtKpi(k, State.targets[k.id])) + '</td><td>' + chipHtml(st.status, STATUS_TXT[st.status]) + '</td></tr>'; }).join('') + '</tbody>';
+  }
+  function buildSample() {
+    var leased = FLEET.filter(function (v) { return v.own === 'Kiralık'; }).length;
+    $('sampleStrip').innerHTML = '<span class="tag-sample">Örnek filo</span><span>' + esc(C.BASES.length + ' lokasyon ve ' + FLEET.length + ' araç (' + leased + ' uzun dönem kiralık, ' + (FLEET.length - leased) + ' özmal). Lokasyonlar, plakalar, tutarlar ve tedarikçiler örnektir.') + '</span>';
+  }
+
+  /* ================= 2. ARAÇ YAŞAM DÖNGÜSÜ ================= */
+  var LIFE = null;
+  var STAGES = [
+    { id: 'siparis', k: '1', name: 'Sipariş / teslim alınacak', title: 'Sipariş verilen ve teslim alınacak araçlar',
+      note: 'Sözleşmesi biten araçların yerine gelecek araçlar ve yeni ihtiyaçlar. Teslim tarihi geçen sipariş Gecikmede olarak işaretlenir.' },
+    { id: 'giris', k: '2', name: 'Filoya giriş', title: 'Filoya giriş kontrol listesi',
+      note: 'Teslimden sonraki ilk 60 gün içinde kontrol listesi tamamlanmamış araçlar. Adımlar sırayla yapılır: noter satış/devir, ruhsat ve tescil, trafik sigortası, kasko, yakıt kartı, HGS/OGS, UTTS ve son olarak teslim tutanağı ile kullanıcı bilgilendirme.' },
+    { id: 'kullanim', k: '3', name: 'Kullanımda', title: 'Kullanımdaki araçlar',
+      note: 'Kullanıcıya zimmetli araçlar ve havuz araçları. Km sütunundaki çubuk, sözleşme bitişindeki tahmini km değerinin limite oranını gösterir.' },
+    { id: 'iade', k: '4', name: 'İade / sözleşme bitişi', title: 'İadesi yaklaşan araçlar ve km aşımı tahmini',
+      note: 'Kira sözleşmesinin bitişine 90 gün veya daha az kalan araçlar. İade kontrol listesi sırası: ekspertiz, UTTS sökümü, km ve fotoğraf kaydı, yakıt kartı iptali, HGS/OGS iptali, evrak teslimi, iade tutanağı.' }
+  ];
+  var STAGE = {}; STAGES.forEach(function (s) { STAGE[s.id] = s; });
+  var ORDER_CLS = { 'Gecikmede': 'crit', 'Teslime hazırlanıyor': 'warn', 'Sipariş verildi': 'info' };
+  function ticks(items, done) {
+    return '<span class="cks" aria-hidden="true">' + items.map(function (it) {
+      var ok = !!done && done[it.id] === true;
+      return '<span class="ck ' + (ok ? 'y' : 'n') + '" title="' + esc(it.name + (ok ? ': tamam' : ': eksik')) + '">' + (ok ? '✓' : '✕') + '</span>';
+    }).join('') + '</span>';
+  }
+  function vehCell(v) { return '<td class="nowrap"><b>' + esc(v.plate) + '</b><span class="sub">' + esc(C.TYPE[v.type].short + (v.own === 'Özmal' ? ' · özmal' : '')) + '</span></td>'; }
+  function renderYasam() {
+    if (!LIFE) { LIFE = C.lifecycle(FLEET, REC, ORDERS); }
+    var L0 = LIFE, L = {};
+    function fOk(r) { var b = r.o ? r.o.base : r.v.base, t = r.o ? r.o.type : r.v.type; return (State.lcBase === 'all' || b === State.lcBase) && (State.lcType === 'all' || t === State.lcType); }
+    STAGES.forEach(function (sg) { L[sg.id] = L0[sg.id].filter(fOk); });
+    var late = L.siparis.filter(function (x) { return x.status === 'Gecikmede'; }).length;
+    var miss = sum(L.giris.map(function (r) { return r.cl.total - r.cl.done; }));
+    var zim = L.kullanim.filter(function (r) { return C.TYPE[r.v.type].assign === 'zimmet'; }).length, hav = L.kullanim.length - zim;
+    var risky = L.iade.filter(function (r) { return r.risk && r.risk.excess > 0; }), riskTl = sum(risky.map(function (r) { return r.risk.charge; }));
+    var lateRet = L.iade.filter(function (r) { return r.risk && r.risk.left < 0; }).length;
+    var info = {
+      siparis: { sub: late ? late + ' sipariş gecikmede' : 'Gecikme yok', chip: late ? chipHtml('crit', 'Gecikme') : chipHtml('info', 'Planlı') },
+      giris: { sub: miss + ' eksik evrak veya tanımlama', chip: L.giris.length ? chipHtml('warn', 'Tamamla') : chipHtml('good', 'Yok') },
+      kullanim: { sub: 'zimmetli ' + zim + ' · havuz ' + hav, chip: chipHtml('good', 'Aktif') },
+      iade: { sub: risky.length ? risky.length + ' araçta km aşımı ≈ ' + tl(riskTl) : 'Km aşımı beklenmiyor', chip: lateRet ? chipHtml('crit', 'İade gecikti') : chipHtml('warn', 'Planla') }
+    };
+    $('pipe').innerHTML = STAGES.map(function (s) {
+      return '<button type="button" class="stage" data-stage="' + s.id + '" aria-pressed="' + (State.lcStage === s.id ? 'true' : 'false') + '" aria-controls="lcTable">' +
+        '<span class="sg-k">' + s.k + '. aşama</span><span class="sg-t">' + esc(s.name) + '</span>' +
+        '<span class="sg-n">' + n0(L[s.id].length) + '<span class="u">' + (s.id === 'siparis' ? 'sipariş' : 'araç') + '</span></span>' +
+        '<span class="sg-f"><span>' + esc(info[s.id].sub) + '</span>' + info[s.id].chip + '</span></button>';
+    }).join('');
+    var st = STAGE[State.lcStage];
+    var rows = L[st.id].slice();
+    if (st.id === 'siparis') { rows.sort(function (a, b) { return a.o.expected < b.o.expected ? -1 : 1; }); }
+    else if (st.id === 'giris') { rows.sort(function (a, b) { return a.cl.done - b.cl.done || (a.v.start < b.v.start ? 1 : -1); }); }
+    else if (st.id === 'iade') { rows.sort(function (a, b) { return a.v.end < b.v.end ? -1 : 1; }); }
+    else { rows.sort(function (a, b) { return (a.v.end || '9999') < (b.v.end || '9999') ? -1 : ((a.v.end || '9999') > (b.v.end || '9999') ? 1 : (a.v.plate < b.v.plate ? -1 : 1)); }); }
+    var total = rows.length, LIM = 12;
+    if (!State.lcMore) { rows = rows.slice(0, LIM); }
+    moreBtn('lcMore', total, LIM, State.lcMore, 'aracı');
+    $('lcTitle').textContent = st.title;
+    $('lcNote').textContent = st.note + ' Gösterilen: ' + rows.length + ' / ' + total + '.';
+    var head, body, cols;
+    if (st.id === 'siparis') {
+      cols = 7;
+      head = '<tr><th>Sipariş</th><th>Araç türü</th><th>Lokasyon</th><th>Kiralama firması</th><th class="n">Aylık kira (TL)</th><th>Beklenen teslim</th><th>Durum</th></tr>';
+      body = rows.map(function (r) {
+        var o = r.o, d = C.daysBetween(C.REF, o.expected);
+        return '<tr><td class="nowrap"><b>' + esc(o.no) + '</b><span class="sub">' + esc(o.reason) + '</span></td><td>' + esc(C.TYPE[o.type].short) + '</td><td>' + esc(baseShort(o.base)) + '</td>' +
+          '<td class="nowrap">' + esc(C.LESSOR[o.lessor].name) + '</td><td class="n">' + esc(n0(o.rent)) + '</td>' +
+          '<td class="nowrap"><span class="dt st-' + (d < 0 ? 'over' : d <= 14 ? 'soon' : 'ok') + '">' + esc(fmtDate(o.expected)) + '</span><span class="sub">' + esc(relDays(d)) + '</span></td>' +
+          '<td>' + chipHtml(ORDER_CLS[r.status], r.status) + '</td></tr>';
+      });
+    } else if (st.id === 'giris') {
+      cols = 6;
+      head = '<tr><th>Araç</th><th>Lokasyon</th><th>Kullanım</th><th>Teslim alındı</th><th>Kontrol listesi</th><th>Eksik kalemler</th></tr>';
+      body = rows.map(function (r) {
+        var v = r.v, d = C.daysBetween(v.start, C.REF);
+        return '<tr>' + vehCell(v) + '<td>' + esc(baseShort(v.base)) + '</td><td class="nowrap">' + esc(usageTxt(v)) + '</td>' +
+          '<td class="nowrap">' + esc(fmtDate(v.start)) + '<span class="sub">' + esc(n0(d) + ' gün önce') + '</span></td>' +
+          '<td class="nowrap">' + ticks(C.ONB_ITEMS, v.onb) + '<b>' + r.cl.done + '/' + r.cl.total + '</b><span class="sr-only"> kalem tamam</span></td>' +
+          '<td style="min-width:200px">' + esc(r.cl.missing.join(', ')) + '</td></tr>';
+      });
+    } else if (st.id === 'kullanim') {
+      cols = 6;
+      head = '<tr><th>Araç</th><th>Lokasyon</th><th>Kullanım</th><th>Sahiplik</th><th>Sözleşme bitişi</th><th class="n">Km</th></tr>';
+      body = rows.map(function (r) {
+        var v = r.v, k = r.risk, endTd, kmTd;
+        if (v.own === 'Kiralık') {
+          endTd = '<td class="nowrap">' + esc(fmtDate(v.end)) + '<span class="sub">' + esc(n0(Math.round(C.daysBetween(C.REF, v.end) / 30.4)) + ' ay kaldı') + '</span></td>';
+          var up = Math.min(100, k.usePct), cls = k.usePct > 100 ? 'crit' : (k.usePct > 95 ? 'warn' : '');
+          kmTd = '<td class="n">' + esc(n0(r.odo)) + '<span class="sub"><span class="bar ' + cls + '"><span style="width:' + up.toFixed(0) + '%"></span></span>bitişte ' + esc(pct(k.usePct, 0)) + '</span></td>';
+        } else {
+          endTd = '<td class="muted">—</td>';
+          kmTd = '<td class="n">' + esc(n0(r.odo)) + '<span class="sub">limit yok</span></td>';
+        }
+        return '<tr>' + vehCell(v) + '<td>' + esc(baseShort(v.base)) + '</td><td class="nowrap">' + esc(usageTxt(v)) + '</td>' +
+          '<td class="nowrap">' + esc(v.own) + '<span class="sub">' + esc(v.own === 'Kiralık' ? C.LESSOR[v.lessor].name + ' · ' + v.term + ' ay' : 'model yılı ' + v.year) + '</span></td>' + endTd + kmTd + '</tr>';
+      });
+    } else {
+      cols = 8;
+      head = '<tr><th>Araç</th><th>Lokasyon</th><th>Sözleşme bitişi</th><th class="n">Güncel km</th><th class="n">Bitişte tahmini km</th><th class="n">Km limiti</th><th class="n">Tahmini aşım</th><th>İade kontrolü</th></tr>';
+      body = rows.map(function (r) {
+        var v = r.v, k = r.risk, d = k.left, bad = k.excess > 0;
+        return '<tr>' + vehCell(v) + '<td>' + esc(baseShort(v.base)) + '</td>' +
+          '<td class="nowrap"><span class="dt st-' + (d < 0 ? 'over' : d <= 30 ? 'soon' : 'ok') + '">' + esc(fmtDate(v.end)) + '</span><span class="sub">' + esc(relDays(d)) + '</span></td>' +
+          '<td class="n">' + esc(n0(k.odo)) + '</td>' +
+          '<td class="n">' + esc(n0(k.proj)) + '<span class="sub">' + esc(n0(k.odo) + ' + ' + n0(k.daily) + ' × ' + n0(Math.max(0, d))) + '</span></td>' +
+          '<td class="n">' + esc(n0(k.limit)) + '</td>' +
+          '<td class="n' + (bad || d < 0 ? ' neg' : '') + '">' + esc(n0(k.excess) + ' km') + '<span class="sub' + (bad || d < 0 ? ' neg-t' : '') + '">' + esc(d < 0 ? 'gecikme ' + n0(-d) + ' gün · ek kira ≈ ' + tl(v.rent / 30 * -d) : (bad ? '≈ ' + tl(k.charge) + ' (' + nd(k.fee, 2) + ' TL/km)' : 'ek bedel yok')) + '</span></td>' +
+          '<td style="min-width:220px"><span class="nowrap">' + ticks(C.RET_ITEMS, v.retDone) + '<b>' + r.cl.done + '/' + r.cl.total + '</b></span>' +
+            '<span class="sub wrap-t">' + esc(v.lateReason ? v.lateReason : (r.cl.complete ? 'Tüm kalemler tamam.' : 'Sıradaki: ' + r.cl.missing[0] + '.')) + '</span></td></tr>';
+      });
+    }
+    $('lcTable').innerHTML = '<thead>' + head + '</thead><tbody>' + (body.length ? body.join('') : '<tr><td colspan="' + cols + '" class="muted">Bu filtreyle eşleşen kayıt yok.</td></tr>') + '</tbody>';
+    $('lcInfo').innerHTML = infoPop('lcInfoPop', 'Aşama kuralları ve km tahmini',
+      popM('Filoya giriş: teslimden sonraki ilk 60 gün içinde kontrol listesi tamamlanmamış araç. Kontrol listesi tamamlanınca araç Kullanımda aşamasına geçer.') +
+      popM('İade: kira sözleşmesinin bitişine 90 gün veya daha az kalan araç. Bitiş tarihi geçtiği hâlde teslim edilmeyen araç gecikmiş iade sayılır; araç kullanıldığı için km artmaya devam eder ve gecikme günleri için günlük kira (aylık kira / 30) ödenir.') +
+      popM('Aşama sayıları seçili lokasyon ve araç türü filtresine göre hesaplanır.') +
+      popF('Km aşımı', 'Tahmini km = güncel km + son 6 ayın günlük ortalama km değeri × bitişe kalan gün\nAşım = max(0, tahmini km − sözleşme km limiti)\nEk bedel = aşım × kiralama firmasının km aşım bedeli (TL/km)'));
+    syncG();
+  }
+
+  /* ================= 3. BAKIM, HASAR VE SERVİS ================= */
+  var ST_RANK = { over: 0, soon: 1, ok: 2 };
+  var CLAIM_CLS = { 'Ekspertiz bekleniyor': 'warn', 'Onarımda': 'warn', 'Ödeme bekleniyor': 'info', 'Kapandı': 'good' };
+  function calRows(ref) {
+    return FLEET.filter(function (v) { return v.start <= ref; }).map(function (v) {
+      var items = {}, worst = 'ok', near = 99999;
+      C.OBLIGATIONS.forEach(function (o) {
+        var it = C.openItem(v, o.id, ref);
+        items[o.id] = it;
+        if (!it) { return; }
+        if (ST_RANK[it.status] < ST_RANK[worst]) { worst = it.status; }
+        if (it.status !== 'ok' && it.days < near) { near = it.days; }
+      });
+      return { v: v, items: items, worst: worst, near: near };
+    });
+  }
+  function renderBakim() {
+    var m = State.month, ref = C.MONTHS[m].end, rows = calRows(ref);
+    var cnt = { over: 0, soon: 0, ok: 0 }, lg = { over: 0, soon: 0, ok: 0 };
+    var KP = {}; C.OBLIGATIONS.forEach(function (o) { KP[o.id] = o.kpi; });
+    rows.forEach(function (r) { C.OBLIGATIONS.forEach(function (o) { var it = r.items[o.id]; if (it) { cnt[it.status]++; if (KP[o.id]) { lg[it.status]++; } } }); });
+    var k = kpisOf(m), kpm = KPI.pm, stPm = stOf('pm', k.pm), kc = KPI.claims, stC = stOf('claims', k.claims);
+    /* Yasal ve operasyonel kalemler Filo Özeti ile aynı tanımdan gelir (sözleşme bitişi dahil); bakım ve lastik takvimden sayılır */
+    lg = { over: k.legal.value, soon: k.legal.soon };
+    var bl = { over: 0, soon: 0 };
+    rows.forEach(function (r) { ['pm', 'lastik'].forEach(function (id) { var it = r.items[id]; if (it && it.status !== 'ok') { bl[it.status]++; } }); });
+    cnt = { over: lg.over + bl.over, soon: lg.soon + bl.soon };
+    var rule = popF('Durum kuralı', 'Süresi geçti: vade tarihi geçmiş ve işlem yapılmamış. 30 gün içinde: vadeye 0–30 gün var. Uygun: vadeye 30 günden fazla var.') +
+      popM('Yasal ve operasyonel kalemler Filo Özeti ile aynı tanımla sayılır: muayene, trafik sigortası, kasko, MTV, yol yardım paketi ve kira sözleşmesi bitişi. Kiralık araçta aynı gün yenilenen trafik sigortası, kasko ve yol yardım tek teyit kalemidir. Bakım ve lastik kalemleri tablodaki takvimden gelir. Referans tarih ' + fmtDate(ref) + '.');
+    $('calTiles').innerHTML = [
+      sumCard({ id: 'ct-over', title: 'Süresi geçen kalem', val: esc(n0(cnt.over)) + '<span class="u">kalem</span>', sub: 'yasal ' + n0(lg.over) + ' · bakım ve lastik ' + n0(cnt.over - lg.over), chip: chipHtml(cnt.over ? 'crit' : 'good', cnt.over ? 'Kritik' : 'Yok'), pop: rule }),
+      sumCard({ id: 'ct-soon', title: '30 gün içinde dolacak', val: esc(n0(cnt.soon)) + '<span class="u">kalem</span>', sub: 'yasal ' + n0(lg.soon) + ' · bakım ve lastik ' + n0(cnt.soon - lg.soon), chip: chipHtml(cnt.soon ? 'warn' : 'good', cnt.soon ? 'Planla' : 'Yok') }),
+      sumCard({ id: 'ct-pm', title: 'Zamanında bakım', val: esc(pct(k.pm.value, 1)), sub: n0(k.pm.den) + ' bakımın ' + n0(k.pm.num) + ' tanesi zamanında', chip: chipHtml(stPm.status, STATUS_TXT[stPm.status]),
+        pop: popF('Formül', kpm.formula) + popF('Hesap', kpiCalcText(kpm, k.pm, m)) }),
+      sumCard({ id: 'ct-claim', title: 'Açık hasar dosyası', val: esc(n0(k.claims.value)) + '<span class="u">dosya</span>', sub: 'bu ay ikame araç ' + n0(k.sums.subDays) + ' gün', chip: chipHtml(stC.status, STATUS_TXT[stC.status]),
+        pop: popF('Formül', kc.formula) + popF('Hesap', kpiCalcText(kc, k.claims, m)) + popF('İkame araç günü', 'Σ (ikame aracın verildiği günler ∩ seçili ay)') })
+    ].join('');
+    $('calInfo').innerHTML = infoPop('calInfoPop', 'Takvim nasıl hesaplanır?',
+      popM('Periyodik bakım tarihi, bakım km aralığından (15.000 km) ve aracın günlük ortalama km değerinden tahmin edilir; aralık en fazla bir yıldır.') +
+      popM('Muayene tarihleri tescil tarihinden örnek bir kuralla hesaplanır. Lastik sütunu yalnızca yaz ve kış lastiği kullanan araçlar için doludur; dört mevsim lastikli araçlarda değişim yoktur.') +
+      popM('Kiralık araçlarda trafik sigortası, kasko, yol yardım ve MTV işlemlerini kiralama firması yapar; filo ekibi yenilemeyi teyit eder. MTV yalnızca özmal araçlarda izlenir. Tarihler örnektir.'));
+    var shown = rows.filter(function (r) {
+      if (State.calType !== 'all' && r.v.type !== State.calType) { return false; }
+      if (State.calBase !== 'all' && r.v.base !== State.calBase) { return false; }
+      if (State.calSt === 'attn') { return r.worst !== 'ok'; }
+      if (State.calSt === 'over' || State.calSt === 'soon') { return C.OBLIGATIONS.some(function (o) { var it = r.items[o.id]; return it && it.status === State.calSt; }); }
+      return true;
+    }).sort(function (a, b) { return ST_RANK[a.worst] - ST_RANK[b.worst] || a.near - b.near || (a.v.plate < b.v.plate ? -1 : 1); });
+    var total = shown.length;
+    if (!State.calMore) { shown = shown.slice(0, 10); }
+    $('calCount').textContent = shown.length + ' / ' + total + ' araç gösteriliyor; filodaki araç sayısı ' + rows.length + '. Referans tarih ' + fmtDate(ref) + '.';
+    moreBtn('calMore', total, 10, State.calMore, 'aracı');
+    var head = '<thead><tr><th>Araç</th>' + C.OBLIGATIONS.map(function (o) { return '<th>' + esc(o.short) + '</th>'; }).join('') + '</tr></thead>';
+    var body = shown.length ? shown.map(function (r) {
+      return '<tr><td class="nowrap"><b>' + esc(r.v.plate) + '</b><span class="sub">' + esc(C.TYPE[r.v.type].short + ' · ' + baseShort(r.v.base) + ' · ' + r.v.own) + '</span></td>' +
+        C.OBLIGATIONS.map(function (o) {
+          var it = r.items[o.id];
+          if (!it) { return '<td class="muted">—</td>'; }
+          var rt = it.status === 'ok' ? '' : relDays(it.days);
+          return '<td class="nowrap" title="' + esc(o.name + ': ' + DATE_TXT[it.status]) + '"><span class="dt st-' + it.status + '">' + esc(fmtDate(it.due)) + '</span>' + (rt ? '<span class="sub">' + esc(rt) + '</span>' : '') + '</td>';
+        }).join('') + '</tr>';
+    }).join('') : '<tr><td colspan="' + (C.OBLIGATIONS.length + 1) + '" class="muted">Bu filtreyle eşleşen araç yok.</td></tr>';
+    $('calTable').innerHTML = head + '<tbody>' + body + '</tbody>';
+    renderClaims(ref);
+    renderServices(m);
+    syncG();
+  }
+  function renderClaims(ref) {
+    var list = CLAIMS.map(function (c) { return { c: c, st: C.claimStatus(c, ref) }; }).filter(function (x) { return x.st; });
+    list.sort(function (a, b) { var ao = a.st !== 'Kapandı', bo = b.st !== 'Kapandı'; return (ao === bo ? 0 : ao ? -1 : 1) || (a.c.date < b.c.date ? 1 : -1); });
+    var open = list.filter(function (x) { return x.st !== 'Kapandı'; }).length, total = list.length, LIM = 8;
+    var shown = State.claimMore ? list : list.slice(0, LIM);
+    moreBtn('claimMore', total, LIM, State.claimMore, 'dosyayı');
+    $('claimTitle').textContent = 'Hasar ve sigorta dosyaları';
+    $('claimNote').textContent = 'Kasım 2025 ile ' + fmtDate(ref) + ' arasında ' + n0(total) + ' dosya açıldı; ' + n0(open) + ' dosya açık. Açık dosyalar önce gösterilir.';
+    $('claimTable').innerHTML = '<thead><tr><th>Dosya</th><th>Araç</th><th>Kaza tarihi</th><th>Kusur</th><th>Sigorta</th><th class="n">Onarım süresi</th><th class="n">İkame araç</th><th class="n">Hasar tutarı (TL)</th><th>Durum</th></tr></thead><tbody>' +
+      (shown.length ? shown.map(function (x) {
+        var c = x.c, v = VBY[c.v], inRep = x.st === 'Ekspertiz bekleniyor' || x.st === 'Onarımda', late = c.repairDays > c.promised;
+        var rep = inRep ? '<td class="n">devam ediyor<span class="sub">söz verilen ' + n0(c.promised) + ' gün</span></td>' :
+          '<td class="n' + (late ? ' neg' : '') + '">' + n0(c.repairDays) + ' gün<span class="sub">söz verilen ' + n0(c.promised) + ' gün</span></td>';
+        var el = Math.min(c.subDays, C.daysBetween(c.date, ref) + 1);
+        var sub = c.subDays > 0 ? (el < c.subDays ? n0(el) + ' gün (devam ediyor)' : n0(c.subDays) + ' gün') : (C.TYPE[v.type].assign === 'havuz' ? 'havuzdan karşılandı' : 'gerekmedi');
+        return '<tr><td class="nowrap"><b>' + esc(c.no) + '</b></td><td class="nowrap">' + esc(v.plate) + '<span class="sub">' + esc(C.TYPE[v.type].short + ' · ' + baseShort(v.base)) + '</span></td>' +
+          '<td class="nowrap">' + esc(fmtDate(c.date)) + '</td><td class="nowrap">' + esc(c.fault) + '</td><td style="min-width:150px">' + esc(c.cover) + '</td>' + rep +
+          '<td class="n">' + esc(sub) + '</td><td class="n">' + esc(n0(c.amount)) + '<span class="sub">şirket payı ' + esc(n0(c.share)) + '</span></td><td>' + chipHtml(CLAIM_CLS[x.st], x.st) + '</td></tr>';
+      }).join('') : '<tr><td colspan="9" class="muted">Bu tarihe kadar hasar dosyası yok.</td></tr>') + '</tbody>';
+    $('claimInfo').innerHTML = infoPop('claimInfoPop', 'Hasar dosyası kuralları',
+      popM('Durum sırası: ekspertiz bekleniyor (ilk 2 gün), onarımda, ödeme bekleniyor ve kapandı. Araç ekspertiz ve onarım süresince kullanılamaz; bu günler kullanılabilirlik göstergesinden düşülür.') +
+      popF('Şirket payı (muafiyet)', 'Kusurlu kaza: sözleşmedeki muafiyet (kiralık araç ' + n0(C.DEDUCTIBLE['Kiralık']) + ' TL, özmal araç ' + n0(C.DEDUCTIBLE['Özmal']) + ' TL)\nKısmi kusur: muafiyetin yarısı\nKusursuz kaza: 0 TL; hasar karşı tarafın trafik sigortasından tahsil edilir\nHasar muafiyetin altındaysa kasko dosyası açılmaz; tutarı şirket öder ve dosya onarımla kapanır') +
+      popM('Zimmetli araçlarda onarım süresince ikame araç verilir; havuz aracının yerine havuzdaki diğer araçlar kullanılır. Tutarlar örnektir.'));
+  }
+  function renderServices(m) {
+    var from = Math.max(0, m - SVC_WIN + 1), rows = C.serviceStats(FLEET, REC, CLAIMS, m, SVC_WIN);
+    $('svcTitle').textContent = 'Servis sağlayıcı performansı · ' + C.MONTHS[from].label + ' – ' + C.MONTHS[m].label;
+    $('svcTable').innerHTML = '<thead><tr><th>Sağlayıcı</th><th class="n">İş sayısı</th><th class="n">Ortalama süre</th><th class="n">Zamanında teslim</th><th class="n">Tekrar arıza</th><th class="n">Memnuniyet</th><th>Durum</th></tr></thead><tbody>' +
+      rows.map(function (s) {
+        var none = !s.jobs;
+        return '<tr><td class="nowrap"><b>' + esc(s.name) + '</b><span class="sub">' + esc(s.area) + '</span></td><td class="n">' + n0(s.jobs) + '</td>' +
+          '<td class="n">' + (none ? '—' : esc((s.unit === 'dk' ? n0(s.avgDur) : nd(s.avgDur, 1)) + ' ' + s.unit) + (s.unit === 'dk' ? '<span class="sub">varış süresi</span>' : '')) + '</td>' +
+          '<td class="n' + (!none && s.onTime < 80 ? ' neg' : '') + '">' + esc(pct(s.onTime, 0)) + '</td>' +
+          '<td class="n' + (s.repeat != null && s.repeat > 10 ? ' neg' : '') + '">' + (s.repeat == null ? '<span class="muted">—</span>' : esc(pct(s.repeat, 0))) + '</td>' +
+          '<td class="n">' + (none ? '—' : esc(nd(s.csat, 1)) + '<span class="sub">5 üzerinden</span>') + '</td>' +
+          '<td>' + chipHtml(s.status, STATUS_TXT[s.status]) + '</td></tr>';
+      }).join('') + '</tbody>';
+    $('svcNote').textContent = 'Son 12 ayın işleri. Zamanında teslim = söz verilen sürede biten iş / toplam iş. Tekrar arıza = aynı arızayla 30 gün içinde servise dönen iş / toplam iş. Memnuniyet, iş sonrası kullanıcı anketinin ortalamasıdır. Değerler örnektir.';
+    $('svcInfo').innerHTML = infoPop('svcInfoPop', 'Durum kuralı',
+      popF('Durum', 'İyi: zamanında teslim ≥ %90 ve tekrar arıza ≤ %5\nDikkat: zamanında teslim ≥ %80 ve tekrar arıza ≤ %10\nKritik: diğer durumlar') +
+      popM('Yol yardımda süre, çağrıdan aracın yanına varışa kadar geçen dakikadır; söz verilen süre 60 dakikadır. Kaporta servisinde onarımı süren dosyalar hesaba katılmaz.'));
+  }
+
+  /* ================= 4. MALİYET VE RAPORLAMA ================= */
+  function renderMaliyet() {
+    var m = State.month, br = C.budgetRows(FLEET, REC, BUDGET, m), t = br.total;
+    var st = C.kpiStatus(t.pct, BUDGET_TARGET, 'down', BUDGET_BAND);
+    var period = C.MONTHS[0].label + ' – ' + C.MONTHS[m].label;
+    var km = 0; for (var i = 0; i <= m; i++) { km += C.sumMonth(FLEET, REC, i).km; }
+    var risk = C.leaseRisk(FLEET, REC, m).filter(function (r) { return r.excess > 0 && r.left <= RISK_DAYS; }).sort(function (a, b) { return b.charge - a.charge; });
+    var riskTl = sum(risk.map(function (r) { return r.charge; }));
+    var tkm = t.actual / km, stK = C.kpiStatus(tkm, State.targets.costKm, 'down', KPI.costKm.band);
+    $('costTiles').innerHTML = [
+      sumCard({ id: 'mt-act', title: 'Gerçekleşen maliyet', val: esc(mn(t.actual, 1)) + '<span class="u">milyon TL</span>', sub: esc(period),
+        pop: popF('Formül', 'Gerçekleşen = Σ aylık maliyet (kira, yakıt, bakım-onarım, lastik, hasar, HGS/OGS, ceza, özmal sigorta ve vergiler, iade hasarı)') + popF('Hesap', tl(t.actual)) + popM('Tutarlar KDV hariçtir. Yakıt = litre × pompa fiyatı / 1,20 × (1 − %3 kart iskontosu).') }),
+      sumCard({ id: 'mt-pct', title: 'Bütçe gerçekleşme', val: esc(pct(t.pct, 1)), sub: 'dönem bütçesi ' + esc(mn(t.budget, 1)) + ' milyon TL', chip: chipHtml(st.status, STATUS_TXT[st.status]),
+        pop: popF('Formül', 'Bütçe gerçekleşme % = dönem başından seçili aya kadar gerçekleşen maliyet / aynı dönemin bütçesi × 100 (hedef en çok %100)') + popF('Hesap', n0(t.actual) + ' / ' + n0(t.budget) + ' × 100 = ' + pct(t.pct, 1)) +
+          popM('Bütçe Kasım 2025 başında kuruldu: yürürlükteki kira sözleşmeleri, yenilenecek araçlar için plan kirası, planlanan km, aylık %1,6 artan plan motorin fiyatı ve özmal araçların sigorta, vergi ve bakım takvimi. Yakıttaki sapma, motorin fiyatının plandan hızlı artmasından kaynaklanır.') }),
+      sumCard({ id: 'mt-km', title: 'Km başına maliyet', val: esc(nd(tkm, 2)) + '<span class="u">TL/km</span>', sub: 'dönemde ' + esc(n0(km)) + ' km', chip: chipHtml(stK.status, STATUS_TXT[stK.status]),
+        pop: popF('Formül', 'TL/km = dönem toplam maliyeti / dönem toplam km') + popF('Hesap', n0(t.actual) + ' TL / ' + n0(km) + ' km = ' + nd(tkm, 2) + ' TL/km') + popM('Hedef, Filo Özeti hedefleriyle aynıdır: en çok ' + nd(State.targets.costKm, 2) + ' TL/km.') }),
+      sumCard({ id: 'mt-risk', title: 'Km aşımı riski', val: esc(n0(riskTl / 1000)) + '<span class="u">bin TL</span>', sub: risk.length + ' araç · bitişi 12 ay içinde', chip: chipHtml(risk.length ? 'warn' : 'good', risk.length ? 'Önlem al' : 'Yok'),
+        pop: popF('Formül', 'Ek bedel = max(0, güncel km + günlük ortalama km × bitişe kalan gün − km limiti) × km aşım bedeli') + popM('Bitişine 12 ay veya daha az kalan kiralık araçlar sayılır. Araç bazında hesap aşağıdaki tabloda gösterilir.') })
+    ].join('');
+    renderBudgetChart();
+    $('fuelNote').textContent = 'Motorin: örnek seri; Kasım 2026 Bursa pompa fiyatına (' + nd(C.FUEL_NOV26, 2) + ' TL/L) göre ölçeklenmiştir. ' + C.MONTHS[m].label + ' pompa fiyatı ' + nd(C.FUEL_PRICE[m], 2) + ' TL/L (KDV dahil), bütçe varsayımı ' + nd(C.BUDGET_FUEL[m], 2) + ' TL/L. Bütün tutarlar KDV hariçtir.';
+    $('catTitle').textContent = 'Kalem bazında · ' + C.MONTHS[m].label + ' sonu';
+    $('catTable').innerHTML = '<thead><tr><th>Kalem</th><th class="n">Bütçe</th><th class="n">Gerçekleşen</th><th class="n">Fark</th><th class="n">Gerçekleşme</th></tr></thead><tbody>' +
+      br.rows.map(function (r) {
+        var s2 = C.kpiStatus(r.pct, BUDGET_TARGET, 'down', BUDGET_BAND);
+        return '<tr><td>' + esc(r.name) + '</td><td class="n">' + n0(r.budget / 1000) + '</td><td class="n">' + n0(r.actual / 1000) + '</td><td class="n' + (r.diff > 0 ? ' neg' : '') + '">' + signed(r.diff / 1000, 0) + '</td><td class="n">' + chipHtml(s2.status, pct(r.pct, 1)) + '</td></tr>';
+      }).join('') + '</tbody><tfoot><tr><td>Toplam (bin TL)</td><td class="n">' + n0(t.budget / 1000) + '</td><td class="n">' + n0(t.actual / 1000) + '</td><td class="n">' + signed(t.diff / 1000, 0) + '</td><td class="n">' + esc(pct(t.pct, 1)) + '</td></tr></tfoot>';
+    renderTypeCost();
+    renderInvoices();
+    renderRisk(risk, m);
+    syncG();
+  }
+  function renderBudgetChart() {
+    var m = State.month, cum = State.budgetCum, bv = [], av = [], sb = 0, sa = 0;
+    C.MONTHS.forEach(function (mo, i) {
+      var b = 0; C.CATS.forEach(function (c) { b += BUDGET.monthly[i][c.id]; });
+      var a = i <= m ? C.sumMonth(FLEET, REC, i).total : null;
+      sb += b; if (a != null) { sa += a; }
+      bv.push((cum ? sb : b) / 1e6);
+      av.push(a == null ? null : (cum ? sa : a) / 1e6);
+    });
+    $('bcMonthly').setAttribute('aria-pressed', cum ? 'false' : 'true');
+    $('bcCum').setAttribute('aria-pressed', cum ? 'true' : 'false');
+    lineChart($('budgetChart'), {
+      labels: C.MONTHS.map(function (mo) { return mo.short; }), selIdx: m, yZero: cum,
+      series: [{ name: 'Gerçekleşen', values: av }, { name: 'Bütçe', values: bv, cls: 'ch-plan', dot: 'ch-pplan', small: true }],
+      aria: (cum ? 'Kümülatif' : 'Aylık') + ' bütçe ve gerçekleşen maliyet grafiği', fmt: function (v) { return nd(v, 2) + ' milyon TL'; },
+      tick: function (v) { return nd(v, v % 1 === 0 ? 0 : 1); }
+    });
+  }
+  function renderTypeCost() {
+    var m = State.month;
+    $('typeCostTitle').textContent = 'Araç türüne göre TL/km · ' + C.MONTHS[0].label + ' – ' + C.MONTHS[m].label;
+    var rows = C.TYPES.map(function (t) {
+      var cost = 0, km = 0, n = 0;
+      FLEET.forEach(function (v) { if (v.type !== t.id) { return; } n++; for (var i = 0; i <= m; i++) { var r = REC[i][v.id]; cost += C.costTotal(r.cost); km += r.km; } });
+      return { t: t, n: n, cost: cost, km: km, tkm: km > 0 ? cost / km : null };
+    });
+    var all = { cost: sum(rows.map(function (r) { return r.cost; })), km: sum(rows.map(function (r) { return r.km; })) };
+    $('typeCostTable').innerHTML = '<thead><tr><th>Araç türü</th><th class="n">Araç</th><th class="n">Km (bin)</th><th class="n">Maliyet (bin TL)</th><th class="n">TL/km</th></tr></thead><tbody>' +
+      rows.map(function (r) {
+        return '<tr><td>' + esc(r.t.short) + '<span class="sub">' + esc(r.t.assign === 'havuz' ? 'havuz' : 'zimmetli') + '</span></td><td class="n">' + n0(r.n) + '</td><td class="n">' + n0(r.km / 1000) + '</td><td class="n">' + n0(r.cost / 1000) + '</td><td class="n"><b>' + (r.tkm == null ? '—' : esc(nd(r.tkm, 2))) + '</b></td></tr>';
+      }).join('') + '</tbody><tfoot><tr><td>Filo</td><td class="n">' + n0(FLEET.length) + '</td><td class="n">' + n0(all.km / 1000) + '</td><td class="n">' + n0(all.cost / 1000) + '</td><td class="n">' + esc(nd(all.cost / all.km, 2)) + '</td></tr></tfoot>';
+  }
+  function renderInvoices() {
+    var bad = 0, m = State.month, inv = C.buildInvoices(FLEET, REC, m);
+    $('invTitle').textContent = 'Fatura kontrolü · ' + C.MONTHS[m].label;
+    var rows = inv.map(function (iv) {
+      var r = C.invoiceCheck(iv, 1), ok = r.status === 'Uygun';
+      if (!ok) { bad++; }
+      return '<tr><td style="min-width:180px">' + esc(iv.item) + '<span class="sub wrap-t">' + esc(iv.sup + (iv.qty ? ' · ' + iv.qty.replace(/^(\d+)/, function (x) { return n0(+x); }) : '') + (iv.pump ? ' · pompa ' + nd(iv.pump, 2) + ' TL/L KDV dahil' : '')) + '</span>' + (ok || !iv.note ? '' : '<span class="sub neg-t wrap-t">' + esc(iv.note) + '</span>') + '</td>' +
+        '<td class="n">' + esc(n0(r.billed)) + '</td><td class="n">' + esc(n0(r.agreed)) + '</td>' +
+        '<td class="n">' + chipHtml(ok ? 'good' : 'crit', r.status) + '<span class="sub' + (ok ? '' : ' neg-t') + '">' + esc(ok ? 'fark ' + signed(r.diff, 0) : signed(r.diff, 0) + ' TL') + '</span></td></tr>';
+    });
+    $('invTable').innerHTML = '<thead><tr><th>Kalem</th><th class="n">Fatura (TL)</th><th class="n">Beklenen (TL)</th><th class="n">Durum</th></tr></thead><tbody>' + rows.join('') + '</tbody>';
+    var s = $('invSummary');
+    s.className = 'chip ' + (bad ? 'crit' : 'good');
+    s.textContent = bad ? 'İncelenecek: ' + bad + ' / ' + inv.length : 'Tümü uygun';
+  }
+  function renderRisk(risk, m) {
+    var LIM = 8, total = risk.length, shown = State.riskMore ? risk : risk.slice(0, LIM);
+    moreBtn('riskMore', total, LIM, State.riskMore, 'aracı');
+    $('riskTitle').textContent = 'Km aşımı riski · ' + fmtDate(C.MONTHS[m].end) + ' itibarıyla';
+    $('riskNote').textContent = 'Sözleşmesi 12 ay içinde bitecek ve km limitini aşması beklenen ' + n0(total) + ' kiralık araç, tahmini ek bedele göre sıralanmıştır. Erken önlem için aracı düşük km yapan bir kullanıcıyla değiştirin veya sözleşmede km revizyonu isteyin.';
+    $('riskTable').innerHTML = '<thead><tr><th>Araç</th><th>Kiralama firması</th><th>Sözleşme bitişi</th><th class="n">Güncel km</th><th class="n">Günlük ort.</th><th class="n">Bitişte tahmini km</th><th class="n">Limit</th><th class="n">Aşım</th><th class="n">Ek bedel</th></tr></thead><tbody>' +
+      (shown.length ? shown.map(function (r) {
+        var v = r.v, left = Math.max(0, r.left);
+        return '<tr>' + vehCell(v) + '<td class="nowrap">' + esc(C.LESSOR[v.lessor].name) + '<span class="sub">' + esc(nd(r.fee, 2)) + ' TL/km</span></td>' +
+          '<td class="nowrap">' + esc(fmtDate(v.end)) + '<span class="sub">' + esc(relDays(r.left)) + '</span></td>' +
+          '<td class="n">' + esc(n0(r.odo)) + '</td><td class="n">' + esc(n0(r.daily)) + ' km</td>' +
+          '<td class="n">' + esc(n0(r.proj)) + '<span class="sub">' + esc(n0(r.odo) + ' + ' + n0(r.daily) + ' × ' + n0(left)) + '</span></td>' +
+          '<td class="n">' + esc(n0(r.limit)) + '</td><td class="n neg">' + esc(n0(r.excess)) + '</td>' +
+          '<td class="n"><b>' + esc(tl(r.charge)) + '</b><span class="sub">' + esc(n0(r.excess) + ' × ' + nd(r.fee, 2)) + '</span></td></tr>';
+      }).join('') : '<tr><td colspan="9" class="muted">Km limitini aşması beklenen araç yok.</td></tr>') + '</tbody>';
+    $('riskInfo').innerHTML = infoPop('riskInfoPop', 'Km aşımı hesabı',
+      popF('Formül', 'Tahmini km = güncel km + günlük ortalama km × sözleşme bitişine kalan gün\nAşım = max(0, tahmini km − sözleşme km limiti)\nEk bedel = aşım × kiralama firmasının km aşım bedeli (TL/km)') +
+      popM('Günlük ortalama km, son 6 ayın toplam km değerinin takvim gününe bölünmesiyle bulunur. Km limiti = yıllık km hakkı × sözleşme süresi (yıl). Km aşım bedelleri örnektir ve KDV hariçtir.'));
+  }
+
+  /* ================= 5. TELEMATİK VE KULLANIM ================= */
+  function telOf(v, m) {
+    var t = C.TYPE[v.type], r = REC[m][v.id], u = 0, a = 0;
+    for (var i = Math.max(0, m - TEL.months + 1); i <= m; i++) { u += REC[i][v.id].used; a += REC[i][v.id].avail; }
+    var o = { v: v, t: t, r: r, util6: a > 0 ? u / a * 100 : null, km: r.km, daily: r.used > 0 ? r.km / r.used : null,
+      idle: r.engineH > 0 ? r.idleH / r.engineH * 100 : null, off: r.km > 0 ? r.offKm / r.km * 100 : null,
+      speed1k: r.km > 0 ? r.speed / r.km * 1000 : null, harsh1k: r.km > 0 ? r.harsh / r.km * 1000 : null,
+      viol: r.km > 0 ? (r.harsh + r.speed) / r.km * 1000 : null, loss: 0, flags: [] };
+    var lowLim = t.assign === 'havuz' ? TEL.lowPool : TEL.lowZimmet;
+    if (o.util6 != null && o.util6 < lowLim) { o.flags.push(t.id === 'yonetici' ? 'info' : 'low'); }
+    if (o.idle != null && o.idle > TEL.idleHigh) {
+      o.flags.push('idle');
+      o.excessH = r.idleH - r.engineH * TEL.idleTarget / 100;
+      o.loss = o.excessH * t.idleLph * C.fuelNet(m);
+    }
+    if (!t.private && o.off != null && o.off > TEL.offHigh) { o.flags.push('off'); }
+    if (o.viol != null && o.viol > TEL.violHigh) { o.flags.push('viol'); }
+    return o;
+  }
+  var FLAG = { info: { t: 'Bilgi', cls: 'na' }, low: { t: 'Az kullanılan', cls: 'warn' }, idle: { t: 'Yüksek rölanti', cls: 'crit' }, off: { t: 'Mesai dışı', cls: 'warn' }, viol: { t: 'Hız ve sert fren', cls: 'crit' } };
+  function bestPoolSite(m, exceptId) {
+    var best = null;
+    C.BASES.forEach(function (b) {
+      if (b.id === exceptId) { return; }
+      var r = kpisOf(m, b.id).pool;
+      if (r.den >= 30 && (!best || r.value > best.v)) { best = { b: b, v: r.value }; }
+    });
+    return best;
+  }
+  function flagText(o, f, m) {
+    if (f === 'low') {
+      if (o.t.assign === 'havuz') {
+        var bs = bestPoolSite(m, o.v.base);
+        return 'Son 6 ayda kullanım ' + pct(o.util6, 1) + '. Aracı havuz kullanımı ' + pct(bs.v, 1) + ' olan ' + bs.b.short + ' lokasyonuna aktarın' + (o.v.own === 'Kiralık' ? ' veya sözleşme bitiminde iade edin.' : ' veya satışa çıkarın.');
+      }
+      return 'Son 6 ayda kullanım ' + pct(o.util6, 1) + '. Aracı havuza alın; kullanıcının ihtiyacını havuz aracıyla karşılayın.';
+    }
+    if (f === 'info') { return 'Son 6 ayda kullanım ' + pct(o.util6, 1) + '. Yönetici aracı yan hak olduğu için öneri yapılmaz; kullanım raporu bilgi amaçlı paylaşılır.'; }
+    if (f === 'idle') { return 'Rölanti ' + pct(o.idle, 1) + '; ayda yaklaşık ' + tl(o.loss) + ' yakıt kaybı var. Kullanıcıyı bilgilendirin ve rölanti uyarısını açın.'; }
+    if (f === 'off') { return 'Görev kaydı olmayan mesai dışı km payı ' + pct(o.off, 1) + '. Araç kullanım kurallarını kullanıcıyla yeniden paylaşın.'; }
+    return '1000 km başına ' + nd(o.viol, 1) + ' ihlal (hız ' + nd(o.speed1k, 1) + ', sert fren ' + nd(o.harsh1k, 1) + '). Kullanıcıya güvenli sürüş eğitimi planlayın.';
+  }
+  function renderTelematik() {
+    var m = State.month, list = FLEET.map(function (v) { return telOf(v, m); });
+    var s = C.sumMonth(FLEET, REC, m);
+    var idle = s.engineH > 0 ? s.idleH / s.engineH * 100 : null;
+    var offP = s.kmP > 0 ? s.offKmP / s.kmP * 100 : null;
+    var viol = s.km > 0 ? (s.harsh + s.speed) / s.km * 1000 : null;
+    var idleL = list.filter(function (o) { return o.flags.indexOf('idle') >= 0; }), loss = sum(idleL.map(function (o) { return o.loss; }));
+    var stI = C.kpiStatus(idle, TEL.idleTarget, 'down', { type: 'pt', warn: 3 });
+    var stO = C.kpiStatus(offP, TEL.offTarget, 'down', { type: 'pt', warn: 2 });
+    var stV = C.kpiStatus(viol, TEL.violTarget, 'down', { type: 'rel', warn: 0.2 });
+    var lossCalc = idleL.length ? idleL.map(function (o) { return o.v.plate + ': (' + nd(o.r.idleH, 1) + ' − ' + nd(o.r.engineH, 1) + ' × %10) saat × ' + nd(o.t.idleLph, 1) + ' L/saat × ' + nd(C.fuelNet(m), 2) + ' TL = ' + tl(o.loss); }).join('\n') : 'Eşiği aşan araç yok.';
+    $('telTiles').innerHTML = [
+      sumCard({ id: 'tl-km', title: 'Kullanım günü başına km', val: esc(nd(s.km / s.used, 0)) + '<span class="u">km</span>', sub: 'toplam ' + esc(n0(s.km)) + ' km',
+        pop: popF('Formül', 'Kullanım günü başına km = toplam km / araçların kullanıldığı araç-gün (km aşımı hesabındaki günlük ortalama ise takvim gününe bölünür)') + popF('Hesap', n0(s.km) + ' km / ' + n0(s.used) + ' araç-gün') }),
+      sumCard({ id: 'tl-off', title: 'Mesai dışı kullanım', val: esc(pct(offP, 1)), sub: 'hedef en çok %' + TEL.offTarget, chip: chipHtml(stO.status, STATUS_TXT[stO.status]),
+        pop: popF('Formül', 'Mesai dışı % = görev kaydı olmayan mesai dışı km / toplam km × 100') + popF('Hesap', n0(s.offKmP) + ' / ' + n0(s.kmP) + ' km × 100') + popM('Oran yalnızca havuz ve hafif ticari araçlar için hesaplanır. Zimmetli binek araçlarda özel kullanım araç politikasıyla izinlidir.') }),
+      sumCard({ id: 'tl-viol', title: 'Hız ihlali ve sert fren', val: esc(nd(viol, 2)) + '<span class="u">/ 1000 km</span>', sub: 'hedef en çok ' + TEL.violTarget, chip: chipHtml(stV.status, STATUS_TXT[stV.status]),
+        pop: popF('Formül', 'İhlal / 1000 km = (hız ihlali + sert fren sayısı) / toplam km × 1000') + popF('Hesap', '(' + n0(s.speed) + ' hız ihlali + ' + n0(s.harsh) + ' sert fren) / ' + n0(s.km) + ' km × 1000') }),
+      sumCard({ id: 'tl-idle', title: 'Rölanti oranı', val: esc(pct(idle, 1)), sub: 'hedef en çok %' + TEL.idleTarget, chip: chipHtml(stI.status, STATUS_TXT[stI.status]),
+        pop: popF('Formül', 'Rölanti % = rölanti süresi / kontağın açık kaldığı süre × 100') + popF('Hesap', nd(s.idleH, 0) + ' saat / ' + nd(s.engineH, 0) + ' saat × 100') + popM('Eşiği aşan araçlarda tahmini yakıt kaybı ayda ' + tl(loss) + '.') +
+          popF('Rölanti yakıt kaybı (rölantisi %' + TEL.idleHigh + ' üstündeki araçlar)', lossCalc) })
+    ].join('');
+    /* Aksiyon önerileri */
+    var acts = [], used = {};
+    ['low', 'idle', 'viol', 'off', 'info'].forEach(function (f) {
+      list.filter(function (o) { return o.flags.indexOf(f) >= 0 && !used[o.v.id]; })
+        .sort(function (a, b) { return f === 'idle' ? b.loss - a.loss : f === 'viol' ? b.viol - a.viol : f === 'low' ? a.util6 - b.util6 : b.off - a.off; })
+        .forEach(function (o) { used[o.v.id] = 1; acts.push({ o: o, f: f }); });
+    });
+    var actTotal = acts.length;
+    if (!State.actMore) { acts = acts.slice(0, 6); }
+    moreBtn('actMore', actTotal, 6, State.actMore, 'öneriyi');
+    $('telActions').innerHTML = acts.length ? acts.map(function (a) {
+      return '<li><span class="a-txt"><b>' + esc(a.o.v.plate) + '</b> · ' + esc(a.o.t.short + ' · ' + baseShort(a.o.v.base)) + '</span>' + chipHtml(FLAG[a.f].cls, FLAG[a.f].t) +
+        '<span class="a-sub">' + esc(flagText(a.o, a.f, m)) + (a.o.flags.length > 1 ? ' Ayrıca: ' + a.o.flags.filter(function (f) { return f !== a.f; }).map(function (f) { return FLAG[f].t.toLowerCase(); }).join(', ') + '.' : '') + '</span></li>';
+    }).join('') : '<li><span class="a-txt">Bu ay eşiği aşan araç yok.</span></li>';
+    $('telRuleInfo').innerHTML = infoPop('telRulePop', 'Eşikler',
+      popM('Yönetici araçları yan hak olduğu için az kullanımda yalnızca bilgi verilir. Az kullanılan: son 6 ayda kullanım zimmetli araçta %' + TEL.lowZimmet + ', havuz aracında %' + TEL.lowPool + ' altında. Yüksek rölanti: %' + TEL.idleHigh + ' üstü. Mesai dışı: görev kaydı olmayan mesai dışı km payı %' + TEL.offHigh + ' üstü (havuz ve hafif ticari). Hız ve sert fren: 1000 km başına ' + TEL.violHigh + ' ihlalin üstü.') +
+      popF('Kullanım', 'Kullanım % = son 6 ayda kullanılan araç-gün / kullanılabilir araç-gün × 100') +
+      popF('Rölanti yakıt kaybı', '(rölanti saati − kontak saati × %' + TEL.idleTarget + ') × rölanti tüketimi (L/saat) × KDV hariç sözleşmeli yakıt fiyatı'));
+    /* Tablo */
+    $('telTableTitle').textContent = 'Araç bazında telematik verisi · ' + C.MONTHS[m].label + ' (kullanım sütunu son 6 ay)';
+    function cell(v, txt, flag) { return '<td class="n' + (flag ? ' neg' : '') + '">' + (v == null ? '—' : esc(txt)) + '</td>'; }
+    $('telTable').innerHTML = '<thead><tr><th>Araç</th><th>Lokasyon</th><th class="n">Kullanım (son 6 ay)</th><th class="n">Km (ay)</th><th class="n">Kullanım günü başına km</th><th class="n">Mesai dışı km</th><th class="n">Hız ihlali</th><th class="n">Sert fren</th><th class="n">Rölanti</th></tr></thead><tbody>' +
+      list.slice().sort(function (a, b) { return b.flags.length - a.flags.length || (a.util6 - b.util6); }).map(function (o) {
+        return '<tr><td class="nowrap"><b>' + esc(o.v.plate) + '</b><span class="sub">' + esc(o.t.short + ' · ' + o.v.own) + '</span></td><td class="nowrap">' + esc(baseShort(o.v.base)) + '</td>' +
+          cell(o.util6, pct(o.util6, 1), o.flags.indexOf('low') >= 0 || o.flags.indexOf('info') >= 0) + cell(o.km, n0(o.km)) + cell(o.daily, o.daily == null ? '' : n0(o.daily)) +
+          cell(o.off, pct(o.off, 1) + (o.t.private ? ' (izinli)' : ''), o.flags.indexOf('off') >= 0) +
+          cell(o.speed1k, o.speed1k == null ? '' : n0(o.r.speed), o.flags.indexOf('viol') >= 0) + cell(o.harsh1k, o.harsh1k == null ? '' : n0(o.r.harsh), o.flags.indexOf('viol') >= 0) +
+          cell(o.idle, pct(o.idle, 1), o.flags.indexOf('idle') >= 0) + '</tr>';
+      }).join('') + '</tbody>';
+    syncG();
+    renderMap();
+  }
+
+  /* ---- Harita ---- */
+  var mapState = { mode: null, map: null, layer: null, loading: false, tileErr: false };
+  function baseStats(b, m) {
+    var r = kpisOf(m, b.id);
+    return { n: r.sums.n, avail: r.avail.value, pool: r.pool.value, costKm: r.costKm.value, open: r.legal.value + r.legal.over, over: r.legal.over };
+  }
+  function basePopup(b, st, m) {
+    return '<div class="pop"><h4>' + esc(b.name) + '</h4><table>' +
+      '<tr><td>Araç</td><td class="n"><b>' + n0(st.n) + '</b></td></tr>' +
+      '<tr><td>Kullanılabilirlik</td><td class="n"><b>' + esc(pct(st.avail, 1)) + '</b></td></tr>' +
+      '<tr><td>Havuz kullanımı</td><td class="n"><b>' + esc(pct(st.pool, 1)) + '</b></td></tr>' +
+      '<tr><td>Km başına maliyet</td><td class="n"><b>' + esc(nd(st.costKm, 2)) + ' TL</b></td></tr>' +
+      '<tr><td>30 gün içinde dolan kalem</td><td class="n"><b>' + n0(st.open) + '</b>' + (st.over ? ' (' + n0(st.over) + ' süresi geçmiş)' : '') + '</td></tr>' +
+      '</table><span class="src">' + esc(C.MONTHS[m].label) + ' · örnek veri</span></div>';
+  }
+  function radiusOf(n) { return 5 + Math.sqrt(n) * 2.2; }
+  function loadLeaflet(cb) {
+    if (window.L && window.L.map) { cb(true); return; }
+    if (mapState.loading) { return; }
+    mapState.loading = true;
+    var done = false;
+    function finish(ok) { if (done) { return; } done = true; mapState.loading = false; cb(ok); }
+    var sc = document.createElement('script');
+    sc.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
+    sc.crossOrigin = 'anonymous'; sc.referrerPolicy = 'no-referrer';
+    sc.onload = function () { finish(!!(window.L && window.L.map)); };
+    sc.onerror = function () { finish(false); };
+    setTimeout(function () { finish(!!(window.L && window.L.map)); }, 9000);
+    document.head.appendChild(sc);
+  }
+  function initLeaflet() {
+    var L = window.L;
+    var map = L.map('map', { zoomControl: true, scrollWheelZoom: false, attributionControl: true });
+    var tiles = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 18, attribution: '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap</a> katkıda bulunanlar'
+    }).addTo(map);
+    tiles.on('tileerror', function () {
+      if (!mapState.tileErr) { mapState.tileErr = true; $('mapNote').textContent = 'Harita altlığı (OpenStreetMap) yüklenemedi; işaretler ve açılır bilgiler yine de çalışır.'; }
+    });
+    map.fitBounds(C.BASES.map(function (b) { return [b.lat, b.lon]; }), { padding: [36, 36] });
+    mapState.layer = L.layerGroup().addTo(map);
+    mapState.map = map; mapState.mode = 'leaflet';
+  }
+  function drawLeaflet() {
+    var L = window.L, m = State.month;
+    mapState.layer.clearLayers();
+    C.BASES.map(function (b) { return { b: b, st: baseStats(b, m) }; }).sort(function (a, b) { return b.st.n - a.st.n; }).forEach(function (x) {
+      L.circleMarker([x.b.lat, x.b.lon], { radius: radiusOf(x.st.n), className: 'mk-base', weight: 2, fillOpacity: 0.8 })
+        .bindPopup(basePopup(x.b, x.st, m)).bindTooltip(x.b.short + ' · ' + x.st.n + ' araç', { direction: 'top' }).addTo(mapState.layer);
+    });
+  }
+  var SC_LABEL = { atasehir: 'right', kagithane: 'top', bursa: 'bottom', manisa: 'right', ankara: 'bottom' };
+  function drawSchematic() {
+    var box = $('map'), W = box.clientWidth || 300, H = box.clientHeight || 300, m = State.month, pad = 46;
+    var lons = C.BASES.map(function (b) { return b.lon; }), lats = C.BASES.map(function (b) { return b.lat; });
+    var x0 = Math.min.apply(null, lons), x1 = Math.max.apply(null, lons), y0 = Math.min.apply(null, lats), y1 = Math.max.apply(null, lats);
+    var k = Math.cos(40 * Math.PI / 180), s = Math.min((W - 2 * pad) / ((x1 - x0) * k), (H - 2 * pad) / (y1 - y0));
+    var ox = (W - (x1 - x0) * k * s) / 2, oy = (H - (y1 - y0) * s) / 2;
+    function P(b) { return [ox + (b.lon - x0) * k * s + b.sx, oy + (y1 - b.lat) * s + b.sy]; }
+    var svg = '<svg class="schem" viewBox="0 0 ' + W + ' ' + H + '" role="group" aria-label="Lokasyonların şematik konumu">';
+    C.BASES.forEach(function (b) {
+      var st = baseStats(b, m), p = P(b), r = radiusOf(st.n);
+      var pos = SC_LABEL[b.id] || 'right', lx = p[0], ly = p[1] + 4, anc = 'middle';
+      if (pos === 'right') { lx = p[0] + r + 5; anc = 'start'; }
+      else if (pos === 'left') { lx = p[0] - r - 5; anc = 'end'; }
+      else if (pos === 'top') { ly = p[1] - r - 6; }
+      else { ly = p[1] + r + 14; }
+      svg += '<g class="sc-hit" tabindex="0" role="button" data-base="' + b.id + '" aria-label="' + esc(b.name + ', ' + st.n + ' araç') + '"><circle class="sc-base" cx="' + p[0].toFixed(1) + '" cy="' + p[1].toFixed(1) + '" r="' + r.toFixed(1) + '"/>' +
+        '<text class="sc-txt" x="' + lx.toFixed(1) + '" y="' + ly.toFixed(1) + '" text-anchor="' + anc + '">' + esc(b.short + ' · ' + st.n) + '</text></g>';
+    });
+    svg += '</svg>';
+    box.innerHTML = svg;
+    mapState.mode = 'schematic';
+  }
+  function showSchemInfo(id) {
+    var b = C.BASE[id]; if (!b) { return; }
+    $('scInfo').innerHTML = basePopup(b, baseStats(b, State.month), State.month);
+  }
+  function renderMap() {
+    if (mapState.mode === 'leaflet') { mapState.map.invalidateSize(); drawLeaflet(); return; }
+    if (mapState.mode === 'schematic') { drawSchematic(); if ($('scInfo').innerHTML) { showSchemInfo($('scInfo').getAttribute('data-base')); } return; }
+    if (mapState.loading) { return; }
+    loadLeaflet(function (ok) {
+      if (ok) {
+        try { initLeaflet(); drawLeaflet(); return; } catch (e) { mapState.mode = null; }
+      }
+      $('mapNote').textContent = 'Harita kütüphanesi yüklenemedi; lokasyonlar şematik olarak gösteriliyor. Bilgi için bir lokasyona tıklayın.';
+      drawSchematic();
+    });
+  }
+
+  /* ---------- Olaylar ---------- */
+  function bindUi() {
+    document.addEventListener('click', function (e) {
+      var t = e.target;
+      var gb = t.closest('[data-gpop]');
+      if (gb) { openG(gb.getAttribute('aria-controls')); return; }
+      if (t.closest('[data-gpop-close]')) { closeG(true); return; }
+      var gt = t.closest('[data-goto-target]');
+      if (gt) { closeG(false); openTargets(gt.getAttribute('data-goto-target')); return; }
+      if (gPopId && $(gPopId) && !$(gPopId).contains(t)) { closeG(false); }
+      var tb = t.closest('[data-tgl]');
+      if (tb) { setTgl(tb.getAttribute('aria-controls'), tb.getAttribute('aria-expanded') !== 'true'); return; }
+      if (!$('targetsPanel').hidden && !t.closest('#targetsPanel') && !t.closest('#targetsBtn')) { closeTargets(false); }
+      var sg = t.closest('[data-stage]');
+      if (sg) { State.lcStage = sg.getAttribute('data-stage'); State.lcMore = false; renderYasam(); var nb = document.querySelector('[data-stage="' + State.lcStage + '"]'); if (nb) { nb.focus(); } return; }
+      var sh = t.closest('.sc-hit');
+      if (sh) { $('scInfo').setAttribute('data-base', sh.getAttribute('data-base')); showSchemInfo(sh.getAttribute('data-base')); }
+    });
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape') {
+        if (gPopId) { closeG(true); e.preventDefault(); return; }
+        if (!$('targetsPanel').hidden) { closeTargets(true); e.preventDefault(); }
+        return;
+      }
+      if ((e.key === 'Enter' || e.key === ' ') && e.target.closest && e.target.closest('.sc-hit')) {
+        var id = e.target.closest('.sc-hit').getAttribute('data-base');
+        $('scInfo').setAttribute('data-base', id); showSchemInfo(id); e.preventDefault();
+      }
+    });
+    $('targetsBtn').addEventListener('click', function () { if ($('targetsPanel').hidden) { openTargets(); } else { closeTargets(true); } });
+    $('targetsClose').addEventListener('click', function () { closeTargets(true); });
+    $('targetsForm').addEventListener('submit', function (e) { e.preventDefault(); });
+    $('targetsReset').addEventListener('click', function () {
+      State.targets = defaultTargets();
+      C.KPIS.forEach(function (k) { var i = $('tgt-' + k.id); i.value = inputVal(State.targets[k.id]); i.setAttribute('aria-invalid', 'false'); $('tgt-' + k.id + '-err').textContent = ''; });
+      saveState(); renderOzet();
+    });
+    $('lcMore').addEventListener('click', function () { State.lcMore = !State.lcMore; renderYasam(); });
+    $('calMore').addEventListener('click', function () { State.calMore = !State.calMore; renderBakim(); });
+    $('claimMore').addEventListener('click', function () { State.claimMore = !State.claimMore; renderClaims(C.MONTHS[State.month].end); });
+    $('riskMore').addEventListener('click', function () { State.riskMore = !State.riskMore; renderMaliyet(); });
+    $('actMore').addEventListener('click', function () { State.actMore = !State.actMore; renderTelematik(); });
+    $('bcMonthly').addEventListener('click', function () { State.budgetCum = false; renderBudgetChart(); });
+    $('bcCum').addEventListener('click', function () { State.budgetCum = true; renderBudgetChart(); });
+    ON_TOGGLE.trendTableWrap = function () { renderTrend(); };
+  }
+
+  /* ---------- Başlatma ---------- */
+  function init() {
+    loadState();
+    applyTheme();
+    if (mq && mq.addEventListener) { mq.addEventListener('change', function () { applyTheme(); }); }
+    $('themeBtn').addEventListener('click', function () { State.theme = effectiveDark() ? 'light' : 'dark'; applyTheme(); saveState(); });
+
+    $('monthSel').innerHTML = C.MONTHS.map(function (mo) { return '<option value="' + mo.idx + '">' + esc(mo.label) + '</option>'; }).join('');
+    $('monthSel').value = String(State.month);
+    $('monthSel').addEventListener('change', function (e) { State.month = Number(e.target.value); renderActive(); });
+    $('trendSel').innerHTML = C.KPIS.map(function (k) { return '<option value="' + k.id + '">' + esc(k.name) + '</option>'; }).join('');
+    $('trendSel').value = State.trendKpi;
+    $('trendSel').addEventListener('change', function (e) { State.trendKpi = e.target.value; renderTrend(); });
+    var typeOpts = '<option value="all">Tüm araç türleri</option>' + C.TYPES.map(function (t) { return '<option value="' + t.id + '">' + esc(t.short) + '</option>'; }).join('');
+    var baseOpts = '<option value="all">Tüm lokasyonlar</option>' + C.BASES.map(function (b) { return '<option value="' + b.id + '">' + esc(b.name) + '</option>'; }).join('');
+    $('calType').innerHTML = typeOpts; $('lcType').innerHTML = typeOpts;
+    $('calBase').innerHTML = baseOpts; $('lcBase').innerHTML = baseOpts;
+    $('calSt').innerHTML = [['attn', 'Dikkat gerektirenler'], ['over', 'Süresi geçenler'], ['soon', '30 gün içinde dolanlar'], ['all', 'Tüm araçlar']].map(function (o) { return '<option value="' + o[0] + '">' + esc(o[1]) + '</option>'; }).join('');
+    ['calType', 'calBase', 'calSt'].forEach(function (id) {
+      $(id).value = State[id];
+      $(id).addEventListener('change', function (e) { State[id] = e.target.value; State.calMore = false; renderBakim(); });
+    });
+    ['lcType', 'lcBase'].forEach(function (id) {
+      $(id).value = State[id];
+      $(id).addEventListener('change', function (e) { State[id] = e.target.value; State.lcMore = false; renderYasam(); });
+    });
+
+    buildSample();
+    buildKpiTiles();
+    buildTargets();
+    bindUi();
+
+    document.querySelector('.tabs').addEventListener('keydown', function (e) {
+      if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') { return; }
+      var i = TABS.indexOf(activeTab) + (e.key === 'ArrowRight' ? 1 : -1);
+      i = (i + TABS.length) % TABS.length;
+      window.location.hash = TABS[i];
+      $('tab-' + TABS[i]).focus();
+      e.preventDefault();
+    });
+    window.addEventListener('hashchange', route);
+    var rt = null;
+    window.addEventListener('resize', function () {
+      clearTimeout(rt);
+      rt = setTimeout(function () {
+        if (activeTab === 'ozet') { renderTrend(); }
+        else if (activeTab === 'maliyet') { renderBudgetChart(); }
+        else if (activeTab === 'telematik') { if (mapState.mode === 'leaflet' && mapState.map) { mapState.map.invalidateSize(); } else if (mapState.mode === 'schematic') { drawSchematic(); } }
+        syncG();
+      }, 150);
+    });
+    route();
+  }
+
+  if (document.readyState === 'loading') { document.addEventListener('DOMContentLoaded', init); } else { init(); }
+})();
+</script>
+</body>
+</html>
